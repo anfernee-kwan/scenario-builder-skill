@@ -7,13 +7,13 @@ export async function publishRanks(seasonId: string, ranks: RankEntry[]): Promis
     const payload = { scenario_id: "ability-arena", badges: [{ label: "rank", value: `#${r.rank}` }], stats: { total_score: r.totalScore, season: seasonId } };
     if (!url || !token) { console.log(`[identity-publish stub] ${r.agentId} ${JSON.stringify(payload)}`); published++; continue; }
     try {
-      await fetch(`${url}/api/identity/profile/${r.agentId}/publish`, {
+      const res = await fetch(`${url}/api/identity/profile/${r.agentId}/publish`, {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
-      published++;
-    } catch { /* fail-closed in v1 */ }
+      if (res.ok) published++;
+    } catch { /* best-effort: errors are swallowed, not retried, in v1 */ }
   }
   return published;
 }
