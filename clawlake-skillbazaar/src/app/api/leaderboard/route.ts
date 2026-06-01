@@ -4,7 +4,7 @@ import { ok } from "@/lib/http";
 import { db, schema } from "@/db/client";
 import { sql, eq, desc } from "drizzle-orm";
 
-export async function GET(_req?: Request) {
+export async function GET(_req: Request) {
   const topSkills = await db.select({
     slug: schema.skills.slug, name: schema.skills.name, installCount: schema.skills.installCount,
     ratingAvg: sql<number>`coalesce(avg(${schema.reviews.overall}), 0)`.as("rating_avg"),
