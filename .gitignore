@@ -15,3 +15,6 @@ dist/
 
 # TS build cache
 *.tsbuildinfo
+
+# generated scaffold output (test + CLI runs)
+.tmp-gen/
