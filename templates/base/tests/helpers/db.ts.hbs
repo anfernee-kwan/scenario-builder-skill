@@ -1,0 +1,6 @@
+import { db } from "@/db/client";
+import { sql } from "drizzle-orm";
+
+export async function resetDb() {
+  await db.execute(sql`TRUNCATE {{#each truncate_tables}}{{this}}{{#unless @last}}, {{/unless}}{{/each}} RESTART IDENTITY CASCADE`);
+}
