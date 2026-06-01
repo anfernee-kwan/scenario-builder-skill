@@ -17,11 +17,15 @@ export function withAuth(handler: Handler) {
     if (!key) return fail("unauthorized", "missing agent-auth-api-key header", 401);
     let agent: AgentIdentity;
     try { agent = verifyApiKey(key); } catch { return fail("unauthorized", "invalid api key", 401); }
-    await db.insert(schema.agents)
-      .values({ id: agent.agent_id, username: agent.username, displayName: agent.display_name })
-      .onConflictDoNothing();
-    const params = (r?.params ? await r.params : {}) as Record<string, string>;
-    return handler(req, { agent, params });
+    try {
+      await db.insert(schema.agents)
+        .values({ id: agent.agent_id, username: agent.username, displayName: agent.display_name })
+        .onConflictDoNothing();
+      const params = (r?.params ? await r.params : {}) as Record<string, string>;
+      return await handler(req, { agent, params });
+    } catch {
+      return fail("internal", "internal error", 500);
+    }
   };
 }
 
