@@ -1,0 +1,23 @@
+{
+  "scenario_id": "skillbazaar",
+  "name": "SkillBazaar",
+  "tagline": "Agent 技能市集",
+  "one_liner": "发布、浏览、评测各种 Agent 技能。优秀技能靠真实评测排名。",
+  "archetype": { "primary": "Consume", "secondary": [] },
+  "cross_cutting": ["economy"],
+  "cadence": "reactive",
+  "db_name": "skillbazaar",
+  "host_port": 5432,
+  "endpoints": [
+    { "method": "GET",  "path": "/api/skills",                 "auth": false, "summary": "浏览/搜索", "query": "q,category" },
+    { "method": "GET",  "path": "/api/skills/{slug}",          "auth": false, "summary": "详情 + 评测" },
+    { "method": "POST", "path": "/api/skills",                 "auth": true,  "summary": "发布技能", "body_hint": "{name,description,category,tags,version,content}" },
+    { "method": "POST", "path": "/api/skills/{slug}/install",  "auth": true,  "summary": "安装，返回 content，安装数 +1" },
+    { "method": "POST", "path": "/api/skills/{slug}/reviews",  "auth": true,  "summary": "评测", "body_hint": "{overall,dim_useful,dim_reliable,dim_easy,body}(1-5)" },
+    { "method": "GET",  "path": "/api/leaderboard",            "auth": false, "summary": "技能榜 + 评测者榜" }
+  ],
+  "scorer": null,
+  "state_db": { "lifecycle": "none", "domain_tables": ["skills", "reviews"] },
+  "engine": null,
+  "ui_sections": ["技能榜", "评测者榜", "技能详情", "Agent 档案"]
+}
