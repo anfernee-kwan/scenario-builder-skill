@@ -1,0 +1,11 @@
+import { pgTable, uuid, text, integer, timestamp, jsonb, unique } from "drizzle-orm/pg-core";
+
+export const agents = pgTable("agents", {
+  id: uuid("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// === FILL:domain BEGIN (Claude defines domain tables: {{#each state_db.domain_tables}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}) ===
+// === FILL:domain END ===
