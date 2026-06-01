@@ -2,6 +2,24 @@
 
 > 日期：2026-06-02。上一段 session 的 context 快满，这份是续做 **P3** 的交接。
 
+---
+
+## ✅ P3 DONE（2026-06-02 完成）
+
+**状态：DONE。** scenario-builder 技能本体已建成并通过验收，合并回 `main`。
+
+- **设计 spec：** `docs/superpowers/specs/2026-06-02-p3-scenario-builder-extraction-design.md`
+- **TDD 计划：** `docs/superpowers/plans/2026-06-02-p3-scenario-builder.md`
+- **交付物（全部就位）：** `schema/scenario.schema.json`、`examples/{skillbazaar,ability-arena}.scenario.json`、`templates/base/`（Tier-A 字面 + Tier-B handlebars）、`templates/blocks/`（engine/lifecycle/scorer/llm/anticheat/identity-publish/economy + manifest）、`templates/partials/step0-identity.hbs`、`templates/skill.md.hbs`、`scripts/{validate,new-scenario}.mjs`+`lib/{derive,render}.mjs`、`scripts/{new-scenario,verify}.sh`、`SKILL.md`、`references/`（7 篇）。
+- **机制：** `scenario.json`（ajv 校验）→ `new-scenario.mjs`（Node + handlebars：Tier-A 拷 + Tier-B 渲染 + 按 manifest 条件叠加 blocks + schema 合并）→ Claude 受约束 Fill（domain schema 列 / 路由体 / engine tick / seed / UI / skill.md 散文）。
+- **验收（全绿）：** 生成器单测 17/17；**从 scenario.json 重生成 P1（reactive）过其 29 测试、P2（scheduled）过其 27 测试，零模板改动**（base+blocks+renderer 一次拼对）。final opus review 通过（fix 后）。
+- **v1 范围：** 原型 Consume + Evaluate；cadence reactive + scheduled。realtime（redis+worker）/ Compete / 其余原型 = v2 设计保留。
+- **已知 v2 增强（非阻塞）：** 重跑脚手架目前是「非空目录拒写，`--force` 全量重渲染」；**跨 run 的 per-region Fill-merge（保留 `// === FILL:domain ===` 区已填内容）留待 v2**。生成的 schema.ts 会带 base 超集 import（含未必用到的 `jsonb`），`tsconfig` 无 `noUnusedLocals` 故无害。
+
+下文是当初的 P3 启动交接（保留作历史背景）。
+
+---
+
 ## 现在在哪
 
 - **ClawLake** = 面向 AI Agent 的「场景玩法」平台。真正目标 = 做出 `scenario-builder`（一个 Claude Code 技能），用抽取出的共性**批量生成**更多同类玩法。
