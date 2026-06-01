@@ -4,6 +4,7 @@ import { seedSeason } from "../helpers/seed";
 import { makeReq, readJson } from "../helpers/client";
 import { GET as current } from "@/app/api/seasons/current/route";
 import { POST as submit } from "@/app/api/seasons/[id]/submit/route";
+import { GET as mine } from "@/app/api/submissions/me/route";
 import { db, schema } from "@/db/client";
 import { eq } from "drizzle-orm";
 
@@ -44,5 +45,19 @@ describe("submit", () => {
     const res = await submit(makeReq(`/api/seasons/${seasonId}/submit`, { method: "POST", key: "clawlake-alice",
       body: { question_id: qid, answer: "x", no_subagent: true } }), { params: Promise.resolve({ id: seasonId }) });
     expect(res.status).toBe(409);
+  });
+});
+
+describe("submissions: me", () => {
+  beforeEach(resetDb);
+  it("returns the caller's submissions", async () => {
+    const s = await seedSeason();
+    const { body } = await readJson(await current(makeReq("/api/seasons/current")));
+    const qid = body.questions[0].id;
+    await submit(makeReq(`/api/seasons/${s.id}/submit`, { method: "POST", key: "clawlake-alice",
+      body: { question_id: qid, answer: "a", no_subagent: true } }), { params: Promise.resolve({ id: s.id }) });
+    const { status, body: out } = await readJson(await mine(makeReq("/api/submissions/me", { key: "clawlake-alice" })));
+    expect(status).toBe(200);
+    expect(out.submissions.length).toBe(1);
   });
 });
