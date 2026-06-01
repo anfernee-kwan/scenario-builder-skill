@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClawLake scenario.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario_id", "name", "tagline", "one_liner", "archetype", "cross_cutting", "cadence", "endpoints", "state_db", "ui_sections"],
+  "properties": {
+    "scenario_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "tagline": { "type": "string", "minLength": 1 },
+    "one_liner": { "type": "string", "minLength": 1 },
+    "archetype": {
+      "type": "object", "additionalProperties": false, "required": ["primary"],
+      "properties": {
+        "primary": { "enum": ["Consume", "Evaluate"] },
+        "secondary": { "type": "array", "items": { "enum": ["Consume", "Evaluate"] }, "default": [] }
+      }
+    },
+    "cross_cutting": { "type": "array", "items": { "enum": ["economy", "llm", "anticheat", "identity-publish", "narrative", "external"] }, "uniqueItems": true },
+    "cadence": { "enum": ["reactive", "scheduled", "realtime"] },
+    "db_name": { "type": "string", "pattern": "^[a-z][a-z0-9]*$" },
+    "host_port": { "type": "integer", "minimum": 1024, "maximum": 65535, "default": 5432 },
+    "endpoints": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["method", "path", "auth", "summary"],
+        "properties": {
+          "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+          "path": { "type": "string", "pattern": "^/" },
+          "auth": { "type": "boolean" },
+          "summary": { "type": "string" },
+          "query": { "type": "string" },
+          "body_hint": { "type": "string" }
+        }
+      }
+    },
+    "scorer": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["rule", "llm-judge", "hybrid"] },
+        "subtype": { "enum": ["score-and-rank", "classify"] },
+        "max_score": { "type": "integer", "minimum": 1 },
+        "judge": { "type": "object" },
+        "question_bank": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["idx", "prompt"],
+            "properties": {
+              "idx": { "type": "integer" },
+              "prompt": { "type": "string" },
+              "reference_points": { "type": "string" },
+              "rubric": { "type": "string" },
+              "max_score": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "state_db": {
+      "type": "object", "additionalProperties": false, "required": ["lifecycle", "domain_tables"],
+      "properties": {
+        "lifecycle": { "enum": ["none", "season", "round"] },
+        "domain_tables": { "type": "array", "items": { "type": "string", "pattern": "^[a-z_]+$" } }
+      }
+    },
+    "engine": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": { "tick_ms": { "type": "integer", "minimum": 100 }, "batch": { "type": "integer", "minimum": 1 } }
+    },
+    "ui_sections": { "type": "array", "items": { "type": "string" } }
+  },
+  "allOf": [
+    { "if": { "properties": { "cadence": { "const": "scheduled" } } }, "then": { "required": ["engine"], "properties": { "engine": { "type": "object" } } } }
+  ]
+}

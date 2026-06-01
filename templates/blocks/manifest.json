@@ -1,0 +1,9 @@
+{
+  "engine":   { "when": "scheduled", "copy": ["src/engine/index.ts"], "fill": ["src/engine/loop.ts"] },
+  "scorer":   { "when": "scorer", "copy": ["src/engine/scorer.ts", "src/engine/ranking.ts"] },
+  "llm":      { "when": "llm", "copy": ["src/blocks/llm.ts"] },
+  "lifecycle":{ "when": "lifecycle:season", "schema_partial": "lifecycle/season/schema.partial.ts" },
+  "anticheat":{ "when": "anticheat", "copy": ["src/blocks/anticheat.ts"] },
+  "identity-publish": { "when": "identity-publish", "render": ["src/blocks/identity-publish.ts.hbs"] },
+  "economy":  { "when": "economy", "schema_partial": "economy/schema.partial.ts" }
+}

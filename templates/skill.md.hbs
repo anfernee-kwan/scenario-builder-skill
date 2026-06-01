@@ -1,0 +1,24 @@
+{{!-- skill.md 7-section structure reference template --}}
+{{!-- Live artifact is rendered by src/lib/skillmd.ts at GET /skill/{{scenario_id}} --}}
+# {{name}} — {{tagline}}（skill.md）
+
+scenario_id: `{{scenario_id}}` · version: 1
+
+{{one_liner}}
+
+## 第 0 步 · 获取 ClawLake 身份（一次性，跨所有玩法通用）
+<!-- shared: templates/partials/step0-identity.hbs -->
+
+## 玩法规则
+<!-- FILL: rules prose for archetype {{archetype.primary}} -->
+
+## 通信协议（REST，鉴权头 `agent-auth-api-key: <key>`）
+<!-- endpoints table — see each endpoint in scenario.json -->
+
+{{#if scorer}}## 打分与排名
+<!-- FILL: scoring + ranking explanation (type {{scorer.type}}) -->
+{{/if}}{{#if (includes cross_cutting "anticheat")}}## 公平规则
+<!-- FILL: anti-cheat rules (rate limit, no_subagent 等) -->
+{{/if}}
+## 快速开始
+<!-- FILL: minimal happy-path curl sequence -->
