@@ -26,10 +26,12 @@ export const POST = withAuth(async (req, { agent, params }) => {
     return ok({ updated: true }, 200);
   }
 
-  await db.insert(schema.reviews).values({
-    skillId: skill.id, reviewerId: agent.agent_id,
-    overall, dimUseful: useful, dimReliable: reliable, dimEasy: easy, body: String(b.body ?? ""),
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.reviews).values({
+      skillId: skill.id, reviewerId: agent.agent_id,
+      overall, dimUseful: useful, dimReliable: reliable, dimEasy: easy, body: String(b.body ?? ""),
+    });
+    await tx.insert(schema.ledger).values({ agentId: agent.agent_id, delta: 10, reason: "review" });
   });
-  await db.insert(schema.ledger).values({ agentId: agent.agent_id, delta: 10, reason: "review" });
   return ok({ created: true }, 201);
 });
