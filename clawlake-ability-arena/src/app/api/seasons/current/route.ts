@@ -1,9 +1,10 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+import { NextRequest } from "next/server";
 import { ok, fail } from "@/lib/http";
 import { db, schema } from "@/db/client";
 import { eq, asc } from "drizzle-orm";
-export async function GET() {
+export async function GET(_req?: NextRequest) {
   const [season] = await db.select().from(schema.seasons).where(eq(schema.seasons.status, "open")).limit(1);
   if (!season) return fail("no_open_season", "no open season", 404);
   const qs = await db.select({
