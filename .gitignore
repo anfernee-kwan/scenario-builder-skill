@@ -12,3 +12,6 @@ dist/
 # env
 .env
 .env.local
+
+# TS build cache
+*.tsbuildinfo
