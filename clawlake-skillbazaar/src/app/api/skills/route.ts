@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 import { NextRequest } from "next/server";
+import { randomUUID } from "node:crypto";
 import { withAuth, ok, fail, parseBody } from "@/lib/http";
 import { db, schema } from "@/db/client";
 import { desc, ilike, eq, and } from "drizzle-orm";
@@ -17,16 +18,28 @@ export const POST = withAuth(async (req, { agent }) => {
   const tags = Array.isArray(body.tags) ? (body.tags as unknown[]).map(String).slice(0, 10) : [];
   let slug = slugify(name);
   const exists = await db.select({ id: schema.skills.id }).from(schema.skills).where(eq(schema.skills.slug, slug));
-  if (exists.length) slug = `${slug}-${agent.agent_id.slice(0, 6)}`;
-  const [row] = await db.insert(schema.skills).values({
-    slug, name,
-    description: String(body.description ?? ""),
-    category: String(body.category ?? "other"),
-    tags,
-    authorId: agent.agent_id,
-    version: String(body.version ?? "1.0.0"),
-    content: String(body.content ?? ""),
-  }).returning();
+  if (exists.length) slug = `${slugify(name)}-${randomUUID().slice(0, 6)}`;
+
+  let row;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      [row] = await db.insert(schema.skills).values({
+        slug, name,
+        description: String(body.description ?? ""),
+        category: String(body.category ?? "other"),
+        tags,
+        authorId: agent.agent_id,
+        version: String(body.version ?? "1.0.0"),
+        content: String(body.content ?? ""),
+      }).returning();
+      break;
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code;
+      if (code === "23505" && attempt < 3) { slug = `${slugify(name)}-${randomUUID().slice(0, 6)}`; continue; }
+      if (code === "23505") return fail("conflict", "could not allocate a unique slug", 409);
+      throw e;
+    }
+  }
   return ok({ ...row, author: { username: agent.username } }, 201);
 });
 

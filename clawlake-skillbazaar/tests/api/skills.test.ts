@@ -92,3 +92,17 @@ describe("skills: install", () => {
     expect(body.install_count).toBe(1);
   });
 });
+
+describe("skills: slug collision", () => {
+  beforeEach(resetDb);
+  it("same author can publish the same name 3+ times, each gets a distinct slug, no 500", async () => {
+    const slugs = new Set<string>();
+    for (let i = 0; i < 3; i++) {
+      const res = await createSkill(makeReq("/api/skills", { method: "POST", key: "clawlake-alice", body: { name: "同名技能" } }));
+      const { status, body } = await readJson(res);
+      expect(status).toBe(201);
+      slugs.add(body.slug);
+    }
+    expect(slugs.size).toBe(3);
+  });
+});
