@@ -1,39 +1,39 @@
 import { db, schema } from "@/db/client";
-import { eq, and, lte } from "drizzle-orm";
+import { eq, and, lte, sql } from "drizzle-orm";
 import { scoreSubmission } from "./scorer";
 import { computeRankings } from "./ranking";
 import { publishRanks } from "@/blocks/identity-publish";
 
 export async function tickOnce(now: Date = new Date(), batch = 50): Promise<{ judged: number; archivedSeasons: number }> {
+  // 1) judge pending submissions (no early return)
   const pending = await db.select().from(schema.submissions).where(eq(schema.submissions.status, "pending")).limit(batch);
-  // If there are pending submissions, judge them and return — archiving happens in a later tick
   let judged = 0;
-  if (pending.length > 0) {
-    for (const s of pending) {
-      try {
-        const [q] = await db.select().from(schema.questions).where(eq(schema.questions.id, s.questionId));
-        if (!q) { await db.update(schema.submissions).set({ status: "errored" }).where(eq(schema.submissions.id, s.id)); continue; }
-        const r = await scoreSubmission({ prompt: q.prompt, rubric: q.rubric, referencePoints: q.referencePoints, maxScore: q.maxScore }, s.answer);
-        await db.transaction(async (tx) => {
-          await tx.insert(schema.scores).values({
-            submissionId: s.id, questionId: s.questionId, agentId: s.agentId, seasonId: s.seasonId, score: r.score, rationale: r.rationale,
-          }).onConflictDoUpdate({ target: schema.scores.submissionId, set: { score: r.score, rationale: r.rationale, judgedAt: new Date() } });
-          await tx.update(schema.submissions).set({ status: "scored", updatedAt: new Date() }).where(eq(schema.submissions.id, s.id));
-        });
-        judged++;
-      } catch {
-        await db.update(schema.submissions).set({ status: "errored" }).where(eq(schema.submissions.id, s.id));
-      }
+  for (const s of pending) {
+    try {
+      const [q] = await db.select().from(schema.questions).where(eq(schema.questions.id, s.questionId));
+      if (!q) { await db.update(schema.submissions).set({ status: "errored" }).where(eq(schema.submissions.id, s.id)); continue; }
+      const r = await scoreSubmission({ prompt: q.prompt, rubric: q.rubric, referencePoints: q.referencePoints, maxScore: q.maxScore }, s.answer);
+      await db.transaction(async (tx) => {
+        await tx.insert(schema.scores).values({
+          submissionId: s.id, questionId: s.questionId, agentId: s.agentId, seasonId: s.seasonId, score: r.score, rationale: r.rationale,
+        }).onConflictDoUpdate({ target: schema.scores.submissionId, set: { score: r.score, rationale: r.rationale, judgedAt: new Date() } });
+        await tx.update(schema.submissions).set({ status: "scored", updatedAt: new Date() }).where(eq(schema.submissions.id, s.id));
+      });
+      judged++;
+    } catch {
+      await db.update(schema.submissions).set({ status: "errored" }).where(eq(schema.submissions.id, s.id));
     }
-    return { judged, archivedSeasons: 0 };
   }
 
-  // No pending submissions — check if any seasons are ready to archive
+  // 2) season lifecycle — archive each due/closed season that has NO pending submissions OF ITS OWN
   const due = await db.select().from(schema.seasons)
     .where(and(eq(schema.seasons.status, "open"), lte(schema.seasons.closedAt, now)));
   const closed = await db.select().from(schema.seasons).where(eq(schema.seasons.status, "closed"));
   let archivedSeasons = 0;
   for (const season of [...due, ...closed]) {
+    const [{ n }] = await db.select({ n: sql<number>`count(*)` }).from(schema.submissions)
+      .where(and(eq(schema.submissions.seasonId, season.id), eq(schema.submissions.status, "pending")));
+    if (Number(n) > 0) continue; // this season still has work; skip it (do NOT block other seasons)
     const ranks = await computeRankings(season.id);
     await db.transaction(async (tx) => {
       for (const r of ranks) {
