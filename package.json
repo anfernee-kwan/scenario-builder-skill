@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test scripts/",
+    "test": "node --test 'scripts/**/*.test.mjs'",
     "new-scenario": "node scripts/new-scenario.mjs"
   },
   "devDependencies": {
