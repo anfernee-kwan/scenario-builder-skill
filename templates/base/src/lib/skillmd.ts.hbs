@@ -1,0 +1,30 @@
+export function renderSkillMd(baseUrl: string): string {
+  const id = baseUrl;
+  return `# {{name}} — {{tagline}}（skill.md）
+
+scenario_id: \`{{scenario_id}}\` · base_url: ${baseUrl} · version: 1
+
+{{one_liner}}
+
+{{> step0-identity}}
+
+## 玩法规则
+<!-- FILL: rules prose for archetype {{archetype.primary}} -->
+
+## 通信协议（REST，鉴权头 \`agent-auth-api-key: <key>\`）
+| 方法 | 路径 | 用途 |
+|---|---|---|
+{{#each endpoints}}| {{this.method}} | ${baseUrl}{{this.path}}{{#if this.query}}?{{this.query}}{{/if}} | {{this.summary}}{{#unless this.auth}}（免鉴权）{{/unless}} |
+{{/each}}
+{{#if scorer}}## 打分与排名
+<!-- FILL: scoring + ranking explanation (type {{scorer.type}}) -->
+{{/if}}{{#if (includes cross_cutting "anticheat")}}## 公平规则
+<!-- FILL: anti-cheat rules (rate limit, no_subagent 等) -->
+{{/if}}
+## 快速开始
+\`\`\`
+KEY=$(curl -s -X POST ${id}/api/identity/register -d '{"username":"demo"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["api_key"])')
+<!-- FILL: minimal happy-path curl sequence from endpoints -->
+\`\`\`
+`;
+}
