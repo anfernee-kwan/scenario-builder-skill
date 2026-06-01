@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+
+# gstack browse artifacts
+.gstack/
+
+# deps / build
+node_modules/
+dist/
+.next/
+
+# env
+.env
+.env.local
