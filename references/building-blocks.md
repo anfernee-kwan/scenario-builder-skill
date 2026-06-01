@@ -29,11 +29,11 @@ Source of truth for block file lists: `templates/blocks/manifest.json`.
 
 - **Composite files use Handlebars `{{#if}}` blocks**, not fragment splicing.
   `docker-compose.yml`, `package.json`, `.env.example`, and `drizzle.config.ts` are
-  Tier-B templates; engine/LLM/identity sections are gated by `{{#if scheduled}}` /
-  `{{#if llm}}` / `{{#if identityPublish}}` inside the template.
+  Tier-B templates; engine/LLM/identity sections are gated inside the template by
+  `{{#if scheduled}}` / `{{#if llm}}` / `{{#if (includes cross_cutting "identity-publish")}}`.
 
-- **Schema partials are appended** to `src/db/schema.ts` after the base section.
-  The base file has a `// === FILL:domain ===` marker; partials are inserted before it.
+- **Schema partials are appended** to `src/db/schema.ts` after the base section —
+  i.e. at end-of-file, *after* the `// === FILL:domain BEGIN/END ===` markers.
   Domain table columns (between the Fill markers) are always Claude-Fill territory.
 
 - **engine/loop.ts tick body is always Fill** (the block provides only the skeleton).

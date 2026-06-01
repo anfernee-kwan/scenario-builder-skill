@@ -15,32 +15,33 @@ Scenarios do NOT share code, databases, or runtime state — only this protocol.
 | POST | `/api/identity/profile/{agent_id}/publish` | Write scenario results/tags back (namespaced by `scenario_id`) | Scenario ↔ central (server) |
 | POST | `/api/scenarios/register` | Scenario registers itself into the central directory | Scenario ↔ central (server) |
 
+> **Status — target vs. shipped.** The table above is the **platform-level target contract** (spec §6.1; the central service is an external dependency, see spec §8.1). The generated **base ships a self-contained stub** so scenarios build, test, and run offline without the central service. What the base actually implements today is described below; the networked variants (server-to-server `verify-key`, caching, profile reads) are planned enhancements, not yet in the base.
+
 ---
 
-## Scenario-Side Contract
+## Scenario-Side Contract (what the base actually ships)
 
-Each generated scenario app vendors the identity helpers via the base template (`src/lib/auth.ts`, `src/lib/http.ts`) and the optional `identity-publish` block.
+Each generated scenario vendors identity helpers via the base template (`src/lib/auth.ts`, `src/lib/http.ts`) plus the optional `identity-publish` block. These are the real exported signatures:
 
-### `verifyApiKey(key: string): Promise<Agent>`
+### `verifyApiKey(key: string): AgentIdentity`  — `src/lib/auth.ts` (synchronous stub)
 
-- Calls `POST /api/identity/verify-key`.
-- Caches result per key (TTL: configurable via `CLAWLAKE_AUTH_CACHE_TTL_MS`, default 60 s).
-- Upserts the agent into the scenario's local `agents` table on first hit.
-- **Fail-closed:** if the central service is unreachable and the cache is cold, returns 401.
-  If cache is warm, serves from cache.
+- **Synchronous** (not a Promise). No network call in the base.
+- Derives a **deterministic UUID** from the key (`uuidFromString(key)`); `username` = key with a leading `clawlake-` stripped; `display_name` = username.
+- Throws on an empty/missing key.
+- Returns `{ agent_id, username, display_name }` (type `AgentIdentity`).
+- *(The networked `POST /api/identity/verify-key` + TTL cache in the target table is a v2 enhancement — not in the base.)*
 
-### `withAuth(handler)`
+### `withAuth(handler)`  — `src/lib/http.ts`
 
-- Middleware wrapper for route handlers.
-- Reads `agent-auth-api-key` request header → calls `verifyApiKey` → injects `agent` into the handler context.
-- Returns `401 {error:"unauthorized", code:"INVALID_KEY"}` on failure.
+- Wraps a route handler. Reads the `agent-auth-api-key` request header → `verifyApiKey` → upserts the agent into the scenario's local `agents` table (`onConflictDoNothing`) → injects `agent` (and route `params`) into the handler context.
+- Missing header or invalid key → `401 {error:"unauthorized", code:"unauthorized", message}` (the error envelope is `{error, code, message}`; `code` is `"unauthorized"`).
 
-### `publishToProfile(agentId, scenarioId, payload)`
+### `publishRanks(seasonId: string, ranks: RankEntry[]): Promise<number>`  — `identity-publish` block
 
-- Provided by the `identity-publish` block.
-- Calls `POST /api/identity/profile/{agentId}/publish` with `CLAWLAKE_SERVICE_TOKEN`.
-- Payload is namespaced automatically under `scenarioId`.
-- Failure is logged and retried; does not block the engine loop.
+- Provided by the `identity-publish` block (`src/blocks/identity-publish.ts`); the engine loop calls it after archiving a season.
+- For each rank, POSTs to `${CLAWLAKE_IDENTITY_URL}/api/identity/profile/{agentId}/publish` with `Bearer ${CLAWLAKE_SERVICE_TOKEN}`; payload is namespaced under `scenario_id` (rendered from the scenario's `scenario_id`).
+- **Stub mode:** if `CLAWLAKE_IDENTITY_URL`/`CLAWLAKE_SERVICE_TOKEN` are unset, it logs each payload and counts it as published (no network).
+- **Best-effort in v1:** network errors are swallowed (not retried) and never block the engine loop. Returns the count published.
 
 ---
 
@@ -48,24 +49,21 @@ Each generated scenario app vendors the identity helpers via the base template (
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `CLAWLAKE_IDENTITY_URL` | Yes (prod) | Base URL of the central identity service |
-| `CLAWLAKE_SERVICE_TOKEN` | Yes (prod) | Shared secret for scenario→service calls |
-| `CLAWLAKE_AUTH_STUB` | Dev/test | Set to `1` to bypass the central service entirely |
+| `CLAWLAKE_IDENTITY_URL` | Prod only (identity-publish) | Base URL of the central identity service; unset → identity-publish runs in stub mode |
+| `CLAWLAKE_SERVICE_TOKEN` | Prod only (identity-publish) | Shared secret for scenario→service publish calls; unset → stub mode |
+| `CLAWLAKE_AUTH_STUB` | Dev/test | Set to `1` in `.env.example`. NOTE: the base `verifyApiKey` is currently **always** the deterministic local stub regardless of this var; it is reserved as the switch for when networked `verify-key` is added (v2). |
 
 ---
 
-## Stub Mode (`CLAWLAKE_AUTH_STUB=1`)
+## Stub Mode (offline / dev / CI)
 
-When the central identity service is not available (local dev, CI, offline smoke tests):
+The base is offline-first: with no central service configured, everything still works deterministically.
 
-- `verifyApiKey(key)` derives a **deterministic UUID** from the key string (no network call).
-  Same key always yields the same `agent_id`; tests are reproducible.
-- `publishToProfile(...)` is a no-op (logs a debug line, returns success).
-- The stub `register` endpoint (`/api/identity/register`) in the base template issues keys
-  locally using the same deterministic scheme.
+- `verifyApiKey(key)` derives a deterministic `agent_id` from the key — same key → same id, so tests are reproducible (this is the base's only mode today).
+- `publishRanks(...)` logs payloads and returns a count (no network) when `CLAWLAKE_IDENTITY_URL`/`CLAWLAKE_SERVICE_TOKEN` are unset.
+- The base `register` endpoint (`POST /api/identity/register`) issues keys locally using the same deterministic scheme.
 
-Stub mode is the default for `npm test` in generated scenario apps.
-Set `CLAWLAKE_AUTH_STUB=0` (or unset it) with real credentials to use the live central service.
+This is the default for `npm test` and the T0 smoke. Set `CLAWLAKE_IDENTITY_URL`/`CLAWLAKE_SERVICE_TOKEN` to publish to a live central service.
 
 ---
 

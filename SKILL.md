@@ -43,14 +43,14 @@ bash scripts/new-scenario.sh path/to/scenario.json --out clawlake-<slug>
 
 What the script does:
 1. Validates `scenario.json` against `schema/scenario.schema.json` (errors abort immediately).
-2. Computes derived values: `project_name = "clawlake-" + scenario_id`; `db_name` defaults to `scenario_id` with hyphens stripped; boolean flags `scheduled`, `llm`, `identityPublish`.
+2. Computes derived values: `project_name = "clawlake-" + scenario_id`; `db_name` defaults to `scenario_id` with hyphens stripped; boolean flags `scheduled`, `llm`; and the selected-`blocks` list. (Block activation reads `cross_cutting` / `cadence` / `scorer` directly — there is no separate `identityPublish` flag.)
 3. Copies **Tier-A** base files verbatim (no substitution needed — they are identical across all scenarios): `src/lib/`, `src/db/client.ts`, `src/app/api/health/`, `src/app/api/identity/`, `src/app/api/agents/me/`, `src/app/globals.css`, `tsconfig.json`, `next.config.ts`, `vitest.config.ts`, `Dockerfile`, `.dockerignore`, `tests/helpers/client.ts`.
 4. Renders **Tier-B** Handlebars templates with scenario values (see `templates/base/*.hbs`): `layout.tsx` (`{{name}}`, `{{tagline}}`), `skill/[name]/route.ts` (`{{scenario_id}}`), `.well-known/agent.json/route.ts` (`{{scenario_id}}`, `{{cadence}}`, `{{#each endpoints}}`), `drizzle.config.ts` (`{{db_name}}`), `package.json` (+ `{{#if scheduled}}` engine scripts), `docker-compose.yml` (+ `{{#if scheduled}}` engine service, `{{#if llm}}` LLM env), `.env.example` (same conditionals).
 5. Copies selected **blocks** per `templates/blocks/manifest.json` based on `scenario.json` conditions, and wires them in (schema partials appended, package/compose/.env updated).
 6. Renders `skill.md` skeleton from `templates/skill.md.hbs` (7 sections; rules prose = Fill placeholder).
 7. Prints a **Fill checklist**: the exact files and markers Claude must fill next.
 
-The scaffold is **idempotent** for machine-generated files. Protected Fill zones (marked `// === FILL:domain ===`) are not silently overwritten on re-runs.
+**Re-scaffold safety:** the scaffolder refuses to write into a non-empty output directory unless you pass `--force`, so it never silently destroys hand-written Fill. With `--force` it does a clean full re-render (same `scenario.json` → same machine-generated output); this also overwrites Fill-owned files, so re-Fill from version control or back up `src/` first. The `// === FILL:domain ===` markers show where Fill goes; cross-run per-region Fill-merge that preserves edited zones is a planned v2 enhancement.
 
 ### Phase 4 — Fill 实现循环
 **Who:** Claude, constrained by `scenario.json`.

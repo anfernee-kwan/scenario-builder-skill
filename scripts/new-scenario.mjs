@@ -1,4 +1,4 @@
-import { readFileSync, mkdirSync, writeFileSync, appendFileSync, existsSync, copyFileSync } from "node:fs";
+import { readFileSync, mkdirSync, writeFileSync, appendFileSync, existsSync, copyFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateScenario } from "./validate.mjs";
@@ -8,10 +8,20 @@ import { renderTree, renderString, registerPartial } from "./lib/render.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 
-export function generate(scenarioPath, outDir) {
+export function generate(scenarioPath, outDir, opts = {}) {
   const scenario = JSON.parse(readFileSync(scenarioPath, "utf8"));
   const { valid, errors } = validateScenario(scenario);
   if (!valid) throw new Error("scenario.json invalid:\n" + errors.join("\n"));
+  // Refuse to write into a non-empty dir unless --force: a re-run does a full clean
+  // re-render and would overwrite any hand-written Fill code. Back up / re-Fill, or
+  // scaffold into a fresh dir. (Per-region Fill-merge across re-runs is a v2 enhancement.)
+  if (!opts.force && existsSync(outDir) && readdirSync(outDir).length > 0) {
+    throw new Error(
+      `output dir not empty: ${outDir}\n` +
+      `Refusing to overwrite (it may contain hand-written Fill code).\n` +
+      `Re-run with --force to overwrite, or choose a fresh --out dir.`
+    );
+  }
   const ctx = derive(scenario);
 
   registerPartial("step0-identity", readFileSync(join(ROOT, "templates/partials/step0-identity.hbs"), "utf8"));
@@ -72,7 +82,8 @@ if (process.argv[1] && process.argv[1].endsWith("new-scenario.mjs")) {
   if (!scenarioPath) { console.error("usage: new-scenario.mjs <scenario.json> [--out DIR]"); process.exit(1); }
   const outIdx = process.argv.indexOf("--out");
   const outDir = outIdx > -1 ? process.argv[outIdx + 1] : join(ROOT, `clawlake-${JSON.parse(readFileSync(scenarioPath, "utf8")).scenario_id}`);
-  const r = generate(scenarioPath, outDir);
+  const force = process.argv.includes("--force");
+  const r = generate(scenarioPath, outDir, { force });
   console.log(`scaffolded → ${outDir}`);
   console.log("NEXT — Claude Fill these (under scenario.json contract):");
   for (const t of [...r.fillTargets, ...r.fillHooks]) console.log("  - " + t);

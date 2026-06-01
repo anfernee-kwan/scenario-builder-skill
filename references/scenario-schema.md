@@ -43,7 +43,10 @@ These are computed by `new-scenario.mjs` from the fields above; never put them i
 | `db_name` (fallback) | `scenario_id.replace(/-/g, "")` |
 | `scheduled` (bool) | `cadence === "scheduled"` |
 | `llm` (bool) | `scorer?.type === "llm-judge"` OR `cross_cutting.includes("llm")` |
-| `identityPublish` (bool) | `cross_cutting.includes("identity-publish")` |
+| `blocks` (list) | selected blocks = `cross_cutting` ∪ (`engine` if scheduled) ∪ (`scorer`/`llm` if scorer) ∪ (`lifecycle` if `state_db.lifecycle !== "none"`) |
+| `truncate_tables` (list) | `agents` + lifecycle tables + domain tables (+ `ledger` if economy) — used to render `tests/helpers/db.ts` |
+
+> Block activation reads `cross_cutting` / `cadence` / `scorer` / `state_db.lifecycle` directly (see `blockActive()` in `new-scenario.mjs`); there is no separate `identityPublish` flag.
 
 ---
 

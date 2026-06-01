@@ -71,9 +71,11 @@ cd clawlake-<other-slug> && docker compose stop web
   Missing required fields are caught at the Brief gate, not at Fill.
 - After Scaffold: run `typecheck + build`. If they fail, the scaffolder has a bug — do not proceed to Fill.
 - After Fill: run `typecheck + build + npm test`. If they fail after 3 attempts, escalate as BLOCKED.
-- Re-scaffold safety: re-running `new-scenario.sh` on an existing output directory is idempotent for
-  machine-generated files (Tier A + B). Files with `// === FILL:domain ===` markers are **protected**
-  and will not be silently overwritten.
+- Re-scaffold safety: `new-scenario.sh` **refuses** to write into a non-empty output directory unless
+  `--force` is passed — so it never silently destroys hand-written Fill. With `--force` it does a clean
+  full re-render (same `scenario.json` → same machine output) and overwrites Fill-owned files too;
+  re-Fill from version control or back up `src/` first. (Cross-run per-region Fill-merge that preserves
+  `// === FILL:domain ===` zones is a planned v2 enhancement.)
 
 ---
 
