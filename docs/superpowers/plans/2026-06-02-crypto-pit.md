@@ -23,7 +23,7 @@
 - **Starting cash** `STARTING_CASH_CENTS = 1_000_000` ($10,000), credited by lazy `ensurePortfolio` on first authed access in an open season.
 - Routes: first lines `export const runtime = "nodejs";` + `export const dynamic = "force-dynamic";`. Use `ok(data,status?)` / `fail(code,message,status)` from `@/lib/http`. Auth routes wrap with `withAuth`. Error envelope `{error,code,message}`.
 - Error codes: 401 missing/invalid key, 403 missing `no_subagent` or rate-limited, 409 no open season / season closed, 422 bad field or insufficient cash/holdings, 429 rate limit.
-- Tests: vitest, `DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5434/cryptopit`, `PRICE_MOCK=1`, `CLAWLAKE_AUTH_STUB=1`. Use `tests/helpers/client.ts` (`makeReq`/`readJson`) and `tests/helpers/db.ts` (`resetDb`, rendered by scaffold). `beforeEach(resetDb)`.
+- Tests: vitest, `DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5436/cryptopit`, `PRICE_MOCK=1`, `CLAWLAKE_AUTH_STUB=1`. Use `tests/helpers/client.ts` (`makeReq`/`readJson`) and `tests/helpers/db.ts` (`resetDb`, rendered by scaffold). `beforeEach(resetDb)`.
 
 ---
 
@@ -68,7 +68,7 @@ git checkout -b crypto-pit
   "cross_cutting": ["economy", "identity-publish", "anticheat"],
   "cadence": "scheduled",
   "db_name": "cryptopit",
-  "host_port": 5434,
+  "host_port": 5436,
   "endpoints": [
     { "method": "GET",  "path": "/api/market",          "auth": false, "summary": "各币现价" },
     { "method": "GET",  "path": "/api/seasons/current", "auth": false, "summary": "当前赛季" },
@@ -91,7 +91,7 @@ Expected: `✓ examples/crypto-pit.scenario.json is a valid scenario.json` (exit
 - [ ] **Step 4: Scaffold**
 
 Run: `node scripts/new-scenario.mjs examples/crypto-pit.scenario.json --out clawlake-crypto-pit`
-Expected: `scaffolded → .../clawlake-crypto-pit` + a Fill checklist. Confirm these exist: `clawlake-crypto-pit/src/engine/{index.ts,loop.ts}`, `src/blocks/{anticheat,identity-publish}.ts`, `src/db/schema.ts` (contains `seasons`, `season_rankings`, `ledger`, and the `// === FILL:domain ===` markers), `package.json` (contains `engine:start`), `docker-compose.yml` (contains `engine` service + `POSTGRES_DB: cryptopit` + `5434:5432`).
+Expected: `scaffolded → .../clawlake-crypto-pit` + a Fill checklist. Confirm these exist: `clawlake-crypto-pit/src/engine/{index.ts,loop.ts}`, `src/blocks/{anticheat,identity-publish}.ts`, `src/db/schema.ts` (contains `seasons`, `season_rankings`, `ledger`, and the `// === FILL:domain ===` markers), `package.json` (contains `engine:start`), `docker-compose.yml` (contains `engine` service + `POSTGRES_DB: cryptopit` + `5436:5432`).
 
 - [ ] **Step 5: Install + skeleton typecheck/build**
 
@@ -142,7 +142,7 @@ describe("schema smoke", () => {
 ```
 
 - [ ] **Step 3: Run — expect FAIL** (`schema.assets` undefined / table missing).
-Run: `DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5434/cryptopit npx vitest run tests/unit/db.smoke.test.ts`
+Run: `DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5436/cryptopit npx vitest run tests/unit/db.smoke.test.ts`
 
 - [ ] **Step 4: Fill the domain tables** — in `src/db/schema.ts`, between `// === FILL:domain BEGIN ... ===` and `// === FILL:domain END ===`, insert:
 
@@ -189,8 +189,8 @@ Then ensure the import line at the top of `schema.ts` includes `doublePrecision`
 - [ ] **Step 5: Push schema + run test — expect PASS**
 
 ```bash
-DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5434/cryptopit npm run db:push
-DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5434/cryptopit npx vitest run tests/unit/db.smoke.test.ts
+DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5436/cryptopit npm run db:push
+DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5436/cryptopit npx vitest run tests/unit/db.smoke.test.ts
 ```
 Expected: PASS. (`resetDb` already TRUNCATEs `agents, seasons, assets, portfolios, holdings, orders, season_rankings, ledger` — verify `tests/helpers/db.ts` lists these; it was rendered from the scenario.)
 
@@ -959,7 +959,7 @@ describe("T0 smoke: full crypto-pit journey", () => {
 });
 ```
 
-- [ ] **Step 2: Run the e2e — expect PASS.** `DATABASE_URL=...5434/cryptopit npx vitest run tests/e2e/smoke.e2e.test.ts`
+- [ ] **Step 2: Run the e2e — expect PASS.** `DATABASE_URL=...5436/cryptopit npx vitest run tests/e2e/smoke.e2e.test.ts`
 
 - [ ] **Step 3: Full T0 gate**
 
@@ -967,7 +967,7 @@ describe("T0 smoke: full crypto-pit journey", () => {
 cd clawlake-crypto-pit
 npm run typecheck
 npm run build
-DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5434/cryptopit PRICE_MOCK=1 npm test
+DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5436/cryptopit PRICE_MOCK=1 npm test
 ```
 Expected: typecheck clean, build clean, ALL tests pass (db.smoke/seed, prices, portfolio, orders, reads, engine, e2e). If anything fails, fix root cause; 3-attempt limit then BLOCKED.
 
@@ -1005,4 +1005,4 @@ git push origin main
 - **Spec coverage:** §2 scenario.json → Task 1; §3 schema → Task 2; §4 endpoints → Tasks 5–6; §5 order execution → Task 5; §6 engine → Task 7; §7 cross-cutting (economy→portfolios+ledger audit, identity-publish in engine, anticheat in orders) → Tasks 5,7; §8 prices+mock → Task 3; §9 T0 (smoke + units) → Tasks 2–9; §10 B-findings → Task 10; §11 build location (main repo) → Task 1; §12 YAGNI honored (no limit orders/shorting/fees/timeseries). No gaps.
 - **Placeholder scan:** Task 4 Step 1 flags one brittle test line and instructs its removal — that's an explicit instruction, not a placeholder; all other steps carry full code. skill.md prose (Task 8 Step 5) is described with concrete content per section rather than verbatim markdown — acceptable since it's prose Fill mirroring an existing file.
 - **Type consistency:** `cashCents`/`lastPriceCents`/`costCents`/`priceCents` (int), `qty` (doublePrecision/number), `totalScore` (net worth cents), `tickOnce(): {pricesUpdated, archivedSeasons}`, `ensurePortfolio`/`netWorthCents`/`currentSeason`/`STARTING_CASH_CENTS`, `fetchPrices(assets, tick)`/`mockPriceCents(symbol, tick)`, `publishRanks(seasonId, {agentId,rank,totalScore}[])` — names consistent across Tasks 2–9. Drizzle columns map snake_case DB ↔ camelCase TS as in P1/P2.
-- **DB dependency:** Tasks 2+ need postgres@5434/cryptopit (Task 2 Step 1 starts it via the generated docker-compose).
+- **DB dependency:** Tasks 2+ need postgres@5436/cryptopit (Task 2 Step 1 starts it via the generated docker-compose).

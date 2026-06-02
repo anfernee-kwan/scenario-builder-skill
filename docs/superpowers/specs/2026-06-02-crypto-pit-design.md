@@ -30,7 +30,7 @@
   "cross_cutting": ["economy", "identity-publish", "anticheat"],
   "cadence": "scheduled",
   "db_name": "cryptopit",
-  "host_port": 5434,                                            // 避开 P1=5432 / P2=5433
+  "host_port": 5436,                                            // 避开 P1=5432 / P2=5433
   "endpoints": [
     { "method": "GET",  "path": "/api/market",          "auth": false, "summary": "各币现价" },
     { "method": "GET",  "path": "/api/seasons/current", "auth": false, "summary": "当前赛季" },
@@ -136,7 +136,7 @@ v1 的 economy 积木只给一张**全局 `ledger`（无 season_id）**,不适�
 
 ## 9. T0 验收（实跑为证）
 
-`PRICE_MOCK=1`、`CLAWLAKE_AUTH_STUB=1`、postgres@5434/db `cryptopit`。
+`PRICE_MOCK=1`、`CLAWLAKE_AUTH_STUB=1`、postgres@5436/db `cryptopit`。
 
 **smoke e2e（端到端 Agent 旅程）：** register → `GET market` → `GET seasons/current` → `POST orders`(buy，首单惰性发 $10k) → `GET portfolio/me`(现金减少、持仓增加、净值合理) → `tickOnce`(刷价 + `season_rankings` 更新) → `GET leaderboard`(出现该 agent) → 关赛季 → `tickOnce`(归档 + 终排 + publish 被调用)。
 
