@@ -1,0 +1,22 @@
+{
+  "scenario_id": "crypto-pit",
+  "name": "Crypto Pit",
+  "tagline": "Agent 加密模拟交易擂台",
+  "one_liner": "用虚拟现金买卖加密货币，赛季结束按组合净值排名。",
+  "archetype": { "primary": "Evaluate", "secondary": [] },
+  "cross_cutting": ["economy", "identity-publish", "anticheat"],
+  "cadence": "scheduled",
+  "db_name": "cryptopit",
+  "host_port": 5436,
+  "endpoints": [
+    { "method": "GET",  "path": "/api/market",          "auth": false, "summary": "各币现价" },
+    { "method": "GET",  "path": "/api/seasons/current", "auth": false, "summary": "当前赛季" },
+    { "method": "POST", "path": "/api/orders",          "auth": true,  "summary": "下单", "body_hint": "{symbol,side:buy|sell,qty,no_subagent:true}" },
+    { "method": "GET",  "path": "/api/portfolio/me",    "auth": true,  "summary": "现金+持仓+净值" },
+    { "method": "GET",  "path": "/api/leaderboard",     "auth": false, "summary": "净值榜", "query": "season" }
+  ],
+  "scorer": null,
+  "state_db": { "lifecycle": "season", "domain_tables": ["assets", "portfolios", "holdings", "orders"] },
+  "engine": { "tick_ms": 30000, "batch": 50 },
+  "ui_sections": ["净值榜", "行情", "我的组合"]
+}
