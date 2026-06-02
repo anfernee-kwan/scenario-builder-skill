@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 // Deterministic mock: stable per (symbol, tick), positive, varies by symbol. Cents.
 export function mockPriceCents(symbol: string, tick: number): number {
-  const base: Record<string, number> = { BTC: 5_000_000_00, ETH: 300_000_00, SOL: 15_000_00, BNB: 60_000_00, DOGE: 12 };
+  const base: Record<string, number> = { BTC: 50_000_00, ETH: 3_000_00, SOL: 150_00, BNB: 600_00, DOGE: 12 };
   const baseCents = base[symbol] ?? 1_000_00;
   const h = createHash("sha256").update(`${symbol}:${tick}`).digest();
   const swing = ((h[0] << 8) | h[1]) % 2001 - 1000; // -1000..+1000 bps
