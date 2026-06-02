@@ -18,5 +18,12 @@
   "scorer": null,
   "state_db": { "lifecycle": "season", "domain_tables": ["assets", "portfolios", "holdings", "orders"] },
   "engine": { "tick_ms": 30000, "batch": 50 },
-  "ui_sections": ["净值榜", "行情", "我的组合"]
+  "ui_sections": ["净值榜", "行情", "我的组合"],
+  "design": {
+    "vibe": "professional trading terminal",
+    "theme": "dark",
+    "palette": { "bg": "#0a0e14", "surface": "#11161f", "text": "#cbd5e1", "muted": "#64748b", "accent": "#00ff9c", "success": "#00ff9c", "danger": "#ff4d4d", "border": "#1e2630" },
+    "typography": { "sans": "Inter, system-ui, sans-serif", "mono": "'SF Mono', ui-monospace, monospace", "display": "Inter, system-ui, sans-serif", "scale": "compact" },
+    "radius": "4px", "shadow": "none", "density": "compact"
+  }
 }
