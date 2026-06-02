@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="{{theme}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{name}} — design mockup</title>
+<style>
+  /* Direction tokens — edit per mockup */
+  :root { --bg:{{bg}}; --surface:{{surface}}; --text:{{text}}; --muted:{{muted}}; --accent:{{accent}}; --border:{{border}}; --radius:{{radius}}; }
+  * { box-sizing: border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:{{font}}; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+  .nav { display:flex; gap:1rem; align-items:center; padding:14px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:16px; }
+</style>
+</head>
+<body>
+  <nav class="nav"><b>{{name}}</b></nav>
+  <div class="wrap">
+    <!-- MOCKUP: Claude replaces this body with a representative full-page layout for this玩法 + direction -->
+    <div class="card"><h2>{{name}}</h2><p style="color:var(--muted)">{{vibe}}</p></div>
+  </div>
+</body>
+</html>

@@ -9,7 +9,7 @@ Build self-contained ClawLake agent-first scenarios: each is an independent Next
 
 ---
 
-## 5-Phase Pipeline
+## 6-Phase Pipeline
 
 ### Phase 1 — Conceive 立意
 **Who:** Claude dialogue with the user. **Do this BEFORE reading `examples/` or writing any `scenario.json`.**
@@ -30,12 +30,39 @@ Build self-contained ClawLake agent-first scenarios: each is an independent Next
 - You're modeling the new玩法's structure on skillbazaar/ability-arena instead of the idea + `archetypes.md`.
 - You started drafting `scenario.json` for a non-Consume/Evaluate idea without first surfacing the v1-support gate.
 
-### Phase 2 — Brief 蓝图
+### Phase 2 — Design 设计
+**Who:** Claude + browser preview + user.
+
+After Conceive, propose **~3 visually-distinct design directions** as full-page mockups before writing any app code. Visual direction is locked here; Fill inherits it automatically via the `.cl-*` primitives and CSS token variables.
+
+**Steps:**
+
+1. Author ~3 mockups from `templates/design/mockup.html.hbs`, written to `<玩法>/design/option-{1,2,3}.html`. Each must cover the 玩法's key sections with representative data, palette, and typography applied — not a wireframe, not a placeholder.
+2. Serve for review:
+   ```bash
+   bash scripts/design-preview.sh <玩法>/design [port]
+   ```
+   User browses `http://localhost:PORT`, picks a direction, and iterates until satisfied.
+3. Lock the winner:
+   - Save final mockup as `<玩法>/design/chosen.html`.
+   - Write `<玩法>/design/design-brief.md` (~3–5 sentences: direction name, palette rationale, key decisions).
+   - The chosen direction's tokens become the `design` block in `scenario.json` (written in Phase 3 — Brief).
+
+See `references/design.md` for the `design` block field dictionary, base component primitives, and design quality checklist.
+
+**Hard rules:**
+- Design phase is **default-required** — skip only if the user explicitly opts out.
+- Always propose **~3 visually-distinct** directions. Never offer just one.
+- Output must be **publishable-product quality** — looks like a real app, not a prototype.
+- **Never ship raw/unstyled pages.** White background + black serif text + bare tables = wrong.
+- Fill builds UI on the base `.cl-*` primitives and the chosen direction's tokens. Do not hand-roll ad-hoc styles that ignore the design tokens.
+
+### Phase 3 — Brief 蓝图
 **Who:** Claude writes, user approves.
 
 Produce two artifacts and save them at the new scenario's future root:
 1. `scenario-brief.md` — human-readable brief (use template: `references/scenario-brief.template.md`)
-2. `scenario.json` — machine contract (field spec: `references/scenario-schema.md`, schema: `schema/scenario.schema.json`)
+2. `scenario.json` — machine contract (field spec: `references/scenario-schema.md`, schema: `schema/scenario.schema.json`). Include the `design` block from the chosen direction (Phase 2).
 
 Validate the contract:
 ```bash
@@ -44,7 +71,7 @@ node scripts/validate.mjs scenario.json
 
 **Gate 1:** User approves the brief + schema validation passes. Do not proceed until both are true.
 
-### Phase 3 — Scaffold 脚手架
+### Phase 4 — Scaffold 脚手架
 **Who:** Deterministic script (`new-scenario.mjs`).
 
 ```bash
@@ -56,15 +83,15 @@ bash scripts/new-scenario.sh path/to/scenario.json --out clawlake-<slug>
 What the script does:
 1. Validates `scenario.json` against `schema/scenario.schema.json` (errors abort immediately).
 2. Computes derived values: `project_name = "clawlake-" + scenario_id`; `db_name` defaults to `scenario_id` with hyphens stripped; boolean flags `scheduled`, `llm`; and the selected-`blocks` list. (Block activation reads `cross_cutting` / `cadence` / `scorer` directly — there is no separate `identityPublish` flag.)
-3. Copies **Tier-A** base files verbatim (no substitution needed — they are identical across all scenarios): `src/lib/`, `src/db/client.ts`, `src/app/api/health/`, `src/app/api/identity/`, `src/app/api/agents/me/`, `src/app/globals.css`, `tsconfig.json`, `next.config.ts`, `vitest.config.ts`, `Dockerfile`, `.dockerignore`, `tests/helpers/client.ts`.
-4. Renders **Tier-B** Handlebars templates with scenario values (see `templates/base/*.hbs`): `layout.tsx` (`{{name}}`, `{{tagline}}`), `skill/[name]/route.ts` (`{{scenario_id}}`), `.well-known/agent.json/route.ts` (`{{scenario_id}}`, `{{cadence}}`, `{{#each endpoints}}`), `drizzle.config.ts` (`{{db_name}}`), `package.json` (+ `{{#if scheduled}}` engine scripts), `docker-compose.yml` (+ `{{#if scheduled}}` engine service, `{{#if llm}}` LLM env), `.env.example` (same conditionals).
+3. Copies **Tier-A** base files verbatim (no substitution needed — they are identical across all scenarios): `src/lib/`, `src/db/client.ts`, `src/app/api/health/`, `src/app/api/identity/`, `src/app/api/agents/me/`, `tsconfig.json`, `next.config.ts`, `vitest.config.ts`, `Dockerfile`, `.dockerignore`, `tests/helpers/client.ts`.
+4. Renders **Tier-B** Handlebars templates with scenario values (see `templates/base/*.hbs`): `globals.css.hbs` (emits `:root` CSS variables from `design` tokens + `.cl-*` component primitives), `layout.tsx` (`{{name}}`, `{{tagline}}`, `data-theme`), `skill/[name]/route.ts` (`{{scenario_id}}`), `.well-known/agent.json/route.ts` (`{{scenario_id}}`, `{{cadence}}`, `{{#each endpoints}}`), `drizzle.config.ts` (`{{db_name}}`), `package.json` (+ `{{#if scheduled}}` engine scripts), `docker-compose.yml` (+ `{{#if scheduled}}` engine service, `{{#if llm}}` LLM env), `.env.example` (same conditionals).
 5. Copies selected **blocks** per `templates/blocks/manifest.json` based on `scenario.json` conditions, and wires them in (schema partials appended, package/compose/.env updated).
 6. Renders `skill.md` skeleton from `templates/skill.md.hbs` (7 sections; rules prose = Fill placeholder).
 7. Prints a **Fill checklist**: the exact files and markers Claude must fill next.
 
 **Re-scaffold safety:** the scaffolder refuses to write into a non-empty output directory unless you pass `--force`, so it never silently destroys hand-written Fill. With `--force` it does a clean full re-render (same `scenario.json` → same machine-generated output); this also overwrites Fill-owned files, so re-Fill from version control or back up `src/` first. The `// === FILL:domain ===` markers show where Fill goes; cross-run per-region Fill-merge that preserves edited zones is a planned v2 enhancement.
 
-### Phase 4 — Fill 实现循环
+### Phase 5 — Fill 实现循环
 **Who:** Claude, constrained by `scenario.json`.
 
 Fill exactly the zones left by the scaffolder (printed in the checklist). Respect the boundaries:
@@ -83,7 +110,7 @@ After completing Fill, run T0 smoke before declaring done:
 npm run typecheck && npm run build && npm test
 ```
 
-### Phase 5 — Verify 验收
+### Phase 6 — Verify 验收
 **Who:** Scripts + Claude review.
 
 **T0 (required):** All three must pass:
@@ -99,7 +126,19 @@ bash scripts/verify.sh clawlake-<slug>
 ```
 Requires port 3000 free. See `references/verification.md` for setup notes.
 
-**Gate 2:** T0 green = DONE. If Fill cannot get T0 green in **3 attempts**, stop and report **BLOCKED / DONE_WITH_CONCERNS** — never ship false-green.
+**Design gate (required after T0 passes):**
+1. Screenshot the key pages of the running app.
+2. Compare side-by-side with `<玩法>/design/chosen.html`.
+3. Run the design quality checklist from `references/design.md`.
+
+Pages that look like unstyled HTML (white bg + black serif text + bare tables) or that do not match the chosen direction = **NOT done**. Fix Fill and re-verify.
+
+**Gate 2:** T0 green + design gate passed = DONE. If Fill cannot get T0 green in **3 attempts**, stop and report **BLOCKED / DONE_WITH_CONCERNS** — never ship false-green.
+
+**Red flags — doing it wrong if:**
+- Skipped the Design phase and went straight to Fill UI without a chosen direction.
+- Offered only one design direction (never enough to make a real choice).
+- Pages render as raw unstyled HTML — no palette, no tokens, no `.cl-*` primitives applied.
 
 ---
 
@@ -110,11 +149,13 @@ Requires port 3000 free. See `references/verification.md` for setup notes.
 | `references/common-patterns.md` | The 7 structural commonalities that underpin all ClawLake scenarios |
 | `references/archetypes.md` | Archetype table; v1 defaults for Consume + Evaluate; v2+ archetypes listed |
 | `references/building-blocks.md` | Block trigger conditions, files provided, wiring instructions |
+| `references/design.md` | Design phase guide: directions, preview, `design` block field dictionary, `.cl-*` primitives, quality checklist |
 | `references/identity-protocol.md` | Central identity service contract, stub mode, env vars |
 | `references/scenario-schema.md` | `scenario.json` field dictionary + locked enums |
-| `references/scenario-brief.template.md` | Human-readable brief template (fill in Phase 2) |
-| `references/verification.md` | T0 checklist, error handling rules, P1/P2 regen regression procedure |
+| `references/scenario-brief.template.md` | Human-readable brief template (fill in Phase 3) |
+| `references/verification.md` | T0 checklist, design gate, error handling rules, P1/P2 regen regression procedure |
 | `schema/scenario.schema.json` | Machine-checkable JSON Schema for `scenario.json` |
+| `scripts/design-preview.sh` | Zero-dep local static server for previewing design mockups during Phase 2 |
 | `examples/skillbazaar.scenario.json` | P1 reference: reactive Consume (技能市集 / 内容策展型). **Format reference only — see Phase 1.** |
 | `examples/ability-arena.scenario.json` | P2 reference: scheduled Evaluate (能力测评型). **Format reference only — see Phase 1.** |
 

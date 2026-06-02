@@ -24,3 +24,20 @@ test("derives project_name, flags, default db_name", () => {
 test("db_name defaults to id minus dashes when absent", () => {
   assert.equal(derive({ ...p2, db_name: undefined }).db_name, "abilityarena");
 });
+
+test("design defaults fill in when scenario has no design block", () => {
+  const d = derive(p1); // p1 has no design block
+  assert.equal(d.design.theme, "light");
+  assert.equal(d.design.palette.bg, "#ffffff");
+  assert.equal(d.design.palette.accent, "#4f46e5");
+  assert.equal(d.dark, false);
+});
+
+test("scenario design deep-merges over defaults (partial palette ok)", () => {
+  const d = derive({ ...p1, design: { theme: "dark", palette: { accent: "#00ff9c" } } });
+  assert.equal(d.dark, true);
+  assert.equal(d.design.theme, "dark");
+  assert.equal(d.design.palette.accent, "#00ff9c");   // overridden
+  assert.equal(d.design.palette.text, "#0f172a");      // still from default (deep merge)
+  assert.equal(d.design.radius, "10px");               // untouched default
+});

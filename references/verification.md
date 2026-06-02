@@ -1,8 +1,8 @@
 # Verification
 
-Two gates in the 5-phase pipeline:
-- **Gate 1 — Brief approval** (after Phase 2): `scenario.json` passes schema validation.
-- **Gate 2 — Verify** (after Phase 5): T0 smoke green; optionally full docker stack.
+Two gates in the 6-phase pipeline:
+- **Gate 1 — Brief approval** (after Phase 3): `scenario.json` passes schema validation.
+- **Gate 2 — Verify** (after Phase 6): T0 smoke green + design gate passed; optionally full docker stack.
 
 ---
 
@@ -19,6 +19,22 @@ npm test             # all tests pass
 All three must be green. A partial green (e.g., typecheck passes but tests fail) is **not** acceptable.
 If Fill cannot get all three green within 3 attempts, stop and report **BLOCKED / DONE_WITH_CONCERNS**.
 Never submit a scenario with false-green results.
+
+### Design gate (T0 must pass first)
+
+After T0 is green, verify the visual output:
+
+1. Screenshot the key pages of the running app (leaderboard, submission/action view, skill page, or the 玩法's primary sections).
+2. Compare side-by-side with `<玩法>/design/chosen.html`.
+3. Run the design quality checklist (`references/design.md`):
+   - Clear visual hierarchy
+   - Consistent token use — no hard-coded colors; all values from `--cl-*` CSS variables
+   - No raw browser defaults — white bg + black serif text + unstyled tables = **FAIL**
+   - Responsive layout (no broken mobile)
+   - Visible interaction states (hover/focus)
+   - Pages match the palette, typeface, and density of the chosen direction
+
+Any failure = not done. Fix Fill UI and re-verify (T0 + design gate).
 
 ### What the test suite covers (T0)
 

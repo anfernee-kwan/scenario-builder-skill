@@ -1,4 +1,13 @@
 // Pure: scenario.json (already validated) -> derived values consumed by templates + wiring.
+
+export const DEFAULT_DESIGN = {
+  vibe: "clean neutral",
+  theme: "light",
+  palette: { bg: "#ffffff", surface: "#f7f8fa", text: "#0f172a", muted: "#64748b", accent: "#4f46e5", success: "#16a34a", danger: "#dc2626", border: "#e2e8f0" },
+  typography: { sans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif", mono: "ui-monospace, 'SF Mono', Menlo, monospace", display: "inherit", scale: "comfortable" },
+  radius: "10px", shadow: "soft", density: "comfortable",
+};
+
 export function derive(s) {
   const scheduled = s.cadence === "scheduled";
   const llm = (s.scorer && s.scorer.type === "llm-judge") || (s.cross_cutting ?? []).includes("llm");
@@ -16,5 +25,13 @@ export function derive(s) {
   const economyTables = blocks.has("economy") ? ["ledger"] : [];
   const truncate_tables = ["agents", ...lifecycleTables, ...s.state_db.domain_tables, ...lifecycleRankingTables, ...economyTables];
 
-  return { ...s, project_name: `clawlake-${s.scenario_id}`, db_name, host_port, scheduled, llm, blocks: [...blocks], truncate_tables };
+  const dd = s.design ?? {};
+  const design = {
+    ...DEFAULT_DESIGN, ...dd,
+    palette: { ...DEFAULT_DESIGN.palette, ...(dd.palette ?? {}) },
+    typography: { ...DEFAULT_DESIGN.typography, ...(dd.typography ?? {}) },
+  };
+  const dark = design.theme === "dark";
+
+  return { ...s, project_name: `clawlake-${s.scenario_id}`, db_name, host_port, scheduled, llm, blocks: [...blocks], truncate_tables, design, dark };
 }
