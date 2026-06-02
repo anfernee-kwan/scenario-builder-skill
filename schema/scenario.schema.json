@@ -69,7 +69,31 @@
       "type": ["object", "null"], "additionalProperties": false,
       "properties": { "tick_ms": { "type": "integer", "minimum": 100 }, "batch": { "type": "integer", "minimum": 1 } }
     },
-    "ui_sections": { "type": "array", "items": { "type": "string" } }
+    "ui_sections": { "type": "array", "items": { "type": "string" } },
+    "design": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vibe": { "type": "string" },
+        "theme": { "enum": ["dark", "light"] },
+        "palette": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bg": { "type": "string" }, "surface": { "type": "string" }, "text": { "type": "string" },
+            "muted": { "type": "string" }, "accent": { "type": "string" }, "success": { "type": "string" },
+            "danger": { "type": "string" }, "border": { "type": "string" }
+          }
+        },
+        "typography": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "sans": { "type": "string" }, "mono": { "type": "string" }, "display": { "type": "string" }, "scale": { "enum": ["compact", "comfortable"] } }
+        },
+        "radius": { "type": "string" },
+        "shadow": { "enum": ["none", "soft", "hard"] },
+        "density": { "enum": ["compact", "comfortable"] }
+      }
+    }
   },
   "allOf": [
     { "if": { "properties": { "cadence": { "const": "scheduled" } } }, "then": { "required": ["engine"], "properties": { "engine": { "type": "object" } } } }
