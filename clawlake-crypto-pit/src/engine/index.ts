@@ -9,7 +9,7 @@ async function tick() {
   running = true;
   try {
     const r = await tickOnce();
-    if (r.judged || r.archivedSeasons) console.log(`[engine] judged=${r.judged} archived=${r.archivedSeasons}`);
+    if (r.pricesUpdated || r.archivedSeasons) console.log(`[engine] pricesUpdated=${r.pricesUpdated} archived=${r.archivedSeasons}`);
   } catch (e) {
     console.error("[engine] tick error", e);
   } finally {
