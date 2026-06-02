@@ -18,3 +18,5 @@ dist/
 
 # generated scaffold output (test + CLI runs)
 .tmp-gen/
+
+.superpowers/
