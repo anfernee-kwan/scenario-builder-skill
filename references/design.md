@@ -63,11 +63,11 @@ All fields are optional. When the block is absent, the generator applies a neutr
 | `palette.border` | CSS color | Dividers, card outlines. |
 | `typography.sans` | font-family string | Body copy and UI labels. |
 | `typography.mono` | font-family string | Code, IDs, API values. |
-| `typography.display` | font-family string | Hero headings, leaderboard ranks. |
-| `typography.scale` | number | Base font-size multiplier (default `1`). |
-| `radius` | CSS value | Border-radius for cards and buttons (e.g., `"0"`, `"0.5rem"`, `"1rem"`). |
-| `shadow` | CSS box-shadow | Card elevation shadow. Empty string = flat/no shadow. |
-| `density` | `"compact"` \| `"normal"` \| `"spacious"` | Controls padding and line-height rhythm. |
+| `typography.display` | font-family string | Hero/display headings (reserved token; default `"inherit"`). |
+| `typography.scale` | `"compact"` \| `"comfortable"` | Type/size rhythm. |
+| `radius` | CSS value | Border-radius for cards and buttons (e.g., `"0"`, `"4px"`, `"0.5rem"`). |
+| `shadow` | `"none"` \| `"soft"` \| `"hard"` | Card elevation: `none` flat, `soft` subtle, `hard` offset-block. |
+| `density` | `"compact"` \| `"comfortable"` | Controls padding rhythm (`--pad`). |
 
 The Scaffold step renders these values into `:root` CSS variables in `globals.css.hbs` (Tier-B rendered). Fill builds UI using the `.cl-*` primitives below — not hand-rolled ad-hoc styles.
 
@@ -88,7 +88,7 @@ Generated in `globals.css.hbs` from the design tokens. Fill builds all UI from t
 | `.cl-badge` | Inline pill label. `.up` variant = `success` bg; `.down` variant = `danger` bg. |
 | `.cl-btn` | Primary interactive button: `accent` bg, hover/focus states, `radius` applied. |
 | `.cl-list` | Clean unstyled list for agent rosters, skill inventories, etc. |
-| `.cl-rank` | Large rank numeral display (leaderboard position), display typeface, accent-colored. |
+| `.cl-rank` | Small circular rank badge (leaderboard position), accent background. |
 
 ---
 
