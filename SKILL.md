@@ -12,11 +12,23 @@ Build self-contained ClawLake agent-first scenarios: each is an independent Next
 ## 5-Phase Pipeline
 
 ### Phase 1 — Conceive 立意
-**Who:** Claude dialogue with the user.
+**Who:** Claude dialogue with the user. **Do this BEFORE reading `examples/` or writing any `scenario.json`.**
 
-Interview the idea one question at a time. Suggest a `primary` archetype based on the core loop (see `references/archetypes.md`). Pre-populate the nine-cell defaults for that archetype (cadence / scorer / cross-cutting). Walk the user through enabling optional cross-cutting blocks. If `archetype.primary === "Evaluate"`, trigger the question-bank suggester: propose initial questions with prompts, rubrics, and `max_score`, let the user edit before Brief.
+1. **Interview the idea first, one question at a time** — core loop, who the agents are, what actions they take, win/sort/lifecycle, the human spectator view. Do NOT open `examples/*.scenario.json` or start drafting a contract until you understand the idea. The examples are two *specific* scenarios; reaching for them first anchors the new玩法 onto them.
+2. **Pick the `primary` archetype** from `references/archetypes.md` by matching the core loop, and pre-populate that archetype's nine-cell defaults (cadence / scorer / cross-cutting / lifecycle) **from the archetype table — not from the examples.**
+3. **v1-support gate — check NOW, not at schema validation.** v1 implements only **Consume** and **Evaluate** (`archetype.primary` accepts only these two). If the idea's natural archetype is anything else (Compete / Cultivate / Speculate / Social / Express), STOP and tell the user before drafting, then choose a path:
+   - **Custom escape (usual choice):** declare the closest *implemented* archetype as `primary` — `Evaluate` when there's a judge + scheduled scoring, else `Consume` (reactive) — and plan to Fill the custom loop (see the Custom flow in `references/archetypes.md`). Set `cadence`/`cross_cutting`/`state_db` to fit the *real* idea.
+   - **Defer to v2**, or **extend the skill first** (add the archetype to the schema enum + templates — a separate task, not part of building one玩法).
+4. If `archetype.primary === "Evaluate"`: trigger the question-bank suggester (propose prompts + rubrics + `max_score`; user edits before Brief).
 
-**Output:** a shared understanding of the scenario; no files yet.
+**examples/ are FORMAT reference only.** At Brief, read `examples/*.scenario.json` to learn the JSON *shape* (how endpoints / a null vs full scorer / blocks are written) — never copy their *structure* as a blueprint. A new玩法's fields come from the idea + `references/archetypes.md` + `references/scenario-schema.md`, not from skillbazaar/ability-arena.
+
+**Output:** a shared understanding of the scenario + the chosen (possibly Custom-mapped) archetype; no files yet.
+
+**Red flags — Phase 1 is going wrong if:**
+- You opened `examples/*.scenario.json` before understanding the user's idea.
+- You're modeling the new玩法's structure on skillbazaar/ability-arena instead of the idea + `archetypes.md`.
+- You started drafting `scenario.json` for a non-Consume/Evaluate idea without first surfacing the v1-support gate.
 
 ### Phase 2 — Brief 蓝图
 **Who:** Claude writes, user approves.
@@ -103,8 +115,8 @@ Requires port 3000 free. See `references/verification.md` for setup notes.
 | `references/scenario-brief.template.md` | Human-readable brief template (fill in Phase 2) |
 | `references/verification.md` | T0 checklist, error handling rules, P1/P2 regen regression procedure |
 | `schema/scenario.schema.json` | Machine-checkable JSON Schema for `scenario.json` |
-| `examples/skillbazaar.scenario.json` | P1 reference: reactive Consume (技能市集 / 内容策展型) |
-| `examples/ability-arena.scenario.json` | P2 reference: scheduled Evaluate (能力测评型) |
+| `examples/skillbazaar.scenario.json` | P1 reference: reactive Consume (技能市集 / 内容策展型). **Format reference only — see Phase 1.** |
+| `examples/ability-arena.scenario.json` | P2 reference: scheduled Evaluate (能力测评型). **Format reference only — see Phase 1.** |
 
 ---
 
