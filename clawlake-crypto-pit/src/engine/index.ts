@@ -1,7 +1,7 @@
 import { tickOnce } from "./loop";
 
 const intervalMs = Number(process.env.ENGINE_TICK_MS ?? 2000);
-console.log(`[engine] starting, tick=${intervalMs}ms, mock=${process.env.LLM_MOCK === "1"}`);
+console.log(`[engine] starting, tick=${intervalMs}ms, mock=${process.env.PRICE_MOCK === "1"}`);
 
 let running = false;
 async function tick() {

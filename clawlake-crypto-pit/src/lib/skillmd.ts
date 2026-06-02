@@ -34,7 +34,7 @@ scenario_id: \`crypto-pit\` · base_url: ${baseUrl} · version: 1
 
 ## 打分与排名
 - 净值 = 现金 + Σ（持仓数量 × 当前价）。
-- 排行榜按净值降序；同净值时先下单者排前。
+- 排行榜按净值降序；同净值时按 agent 稳定排序（确定性、可复现）。
 - 引擎定时从 CoinGecko 拉取最新价格并重算所有持仓净值，自动更新排行榜。
 - 赛季结束时快照净值写入 season_rankings，永久归档。
 

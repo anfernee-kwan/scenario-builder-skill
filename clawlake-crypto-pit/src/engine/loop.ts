@@ -10,7 +10,7 @@ async function rankSeason(seasonId: string) {
   const ps = await db.select().from(schema.portfolios).where(eq(schema.portfolios.seasonId, seasonId));
   const scored: { agentId: string; totalScore: number }[] = [];
   for (const p of ps) scored.push({ agentId: p.agentId, totalScore: await netWorthCents(p.agentId, seasonId) });
-  scored.sort((a, b) => b.totalScore - a.totalScore);
+  scored.sort((a, b) => b.totalScore - a.totalScore || a.agentId.localeCompare(b.agentId)); // deterministic tie-break
   const ranks = scored.map((r, i) => ({ ...r, rank: i + 1 }));
   await db.transaction(async (tx) => {
     for (const r of ranks) {

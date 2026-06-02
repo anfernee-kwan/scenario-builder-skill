@@ -45,3 +45,10 @@ DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5436/cryptopit PRICE_MOCK=1 
 | GET | `/api/leaderboard?season=` | no | net-worth ranking |
 
 Error codes: 401 bad key / 403 no `no_subagent` or rate-limited / 409 no open season / 422 bad field or insufficient funds/holdings / 429 rate limit.
+
+## Known follow-ups (from final review)
+
+Non-blocking for this reference build (virtual cash, single-process tests), tracked for later:
+- **Orders read-modify-write race:** `POST /api/orders` reads the portfolio/holding outside the transaction with no row lock; two concurrent same-agent orders could lose an update. Mitigated today by the per-agent rate limit + single-process tests. Fix: conditional `UPDATE … WHERE cash_cents >= cost` or `SELECT … FOR UPDATE` inside the tx.
+- **Test gaps:** no test exercises the 429 rate-limit path, nor cash season-scoping across two seasons (the design is correct — unique per `(agent, season)`, all queries filter by season — just untested).
+
