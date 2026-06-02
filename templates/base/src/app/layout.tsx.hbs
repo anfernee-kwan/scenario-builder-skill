@@ -1,4 +1,15 @@
+import "./globals.css";
 export const metadata = { title: "{{name}}", description: "{{tagline}}" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (<html lang="zh"><body>{children}</body></html>);
+  return (
+    <html lang="zh" data-theme="{{design.theme}}">
+      <body>
+        <nav className="cl-nav">
+          <span className="brand">{{name}}</span>
+          <span className="cl-muted" style=\{{ fontSize: ".85rem" }}>{{tagline}}</span>
+        </nav>
+        <div className="cl-container">{children}</div>
+      </body>
+    </html>
+  );
 }

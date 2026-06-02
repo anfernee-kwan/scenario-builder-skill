@@ -35,3 +35,25 @@ test("db.ts truncates the full table set", () => {
 test("layout title/description from name/tagline", () => {
   assert.match(renderString(tpl("src/app/layout.tsx.hbs"), p1), /title: "SkillBazaar", description: "Agent 技能市集"/);
 });
+test("globals.css renders design tokens into :root variables", () => {
+  const out = renderString(tpl("src/app/globals.css.hbs"), p2);
+  assert.match(out, /:root\s*\{/);
+  assert.match(out, /--accent:/);
+  assert.match(out, /--bg:/);
+  assert.match(out, /\.cl-card/);
+  assert.match(out, /\.cl-table/);
+  assert.match(out, /\.cl-badge/);
+  assert.match(out, /\.cl-btn/);
+  assert.match(out, /\.cl-nav/);
+});
+test("globals.css uses the scenario's accent when design provided", () => {
+  const ctx = derive({ ...p2, design: { theme: "dark", palette: { accent: "#00ff9c" } } });
+  const out = renderString(tpl("src/app/globals.css.hbs"), ctx);
+  assert.match(out, /--accent:\s*#00ff9c/);
+});
+test("layout renders the app shell (nav with scenario name + container)", () => {
+  const out = renderString(tpl("src/app/layout.tsx.hbs"), p2);
+  assert.match(out, /cl-nav/);
+  assert.match(out, /cl-container/);
+  assert.match(out, /Ability Arena/);
+});
