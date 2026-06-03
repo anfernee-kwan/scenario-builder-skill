@@ -1,9 +1,16 @@
 export const dynamic = "force-dynamic";
+import { headers } from "next/headers";
+import { SkillEntryCard } from "./SkillEntryCard";
 export default async function Home() {
+  const hdrs = await headers();
+  const host = hdrs.get("host") ?? "localhost:3000";
+  const proto = hdrs.get("x-forwarded-proto") ?? "http";
+  const skillUrl = `${proto}://${host}/skill/{{scenario_id}}`;
   return (
     <main style=\{{ maxWidth: 720, margin: "2rem auto", fontFamily: "system-ui" }}>
       <h1>{{name}}</h1>
       <p>{{tagline}}</p>
+      <SkillEntryCard skillUrl={skillUrl} />
       {/* FILL: spectator sections — {{#each ui_sections}}{{this}}{{#unless @last}}, {{/unless}}{{/each}} */}
     </main>
   );

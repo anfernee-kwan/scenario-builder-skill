@@ -13,7 +13,7 @@ test("identity-publish renders scenario_id", () => {
   assert.match(out, /export async function publishRanks/);
 });
 
-test("manifest is valid JSON with the 7 blocks", () => {
+test("manifest is valid JSON with the 8 blocks", () => {
   const m = JSON.parse(readFileSync(new URL("../../templates/blocks/manifest.json", import.meta.url), "utf8"));
-  for (const b of ["engine","scorer","llm","lifecycle","anticheat","identity-publish","economy"]) assert.ok(m[b], `missing ${b}`);
+  for (const b of ["engine","scorer","llm","lifecycle-season","lifecycle-round","anticheat","identity-publish","economy"]) assert.ok(m[b], `missing ${b}`);
 });

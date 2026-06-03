@@ -7,6 +7,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <nav className="cl-nav">
           <span className="brand">{{name}}</span>
           <span className="cl-muted" style=\{{ fontSize: ".85rem" }}>{{tagline}}</span>
+          <a href="/skill/{{scenario_id}}" target="_blank" style=\{{ marginLeft: "auto", fontSize: ".8rem", color: "var(--accent)", border: "1px solid var(--accent)", padding: "2px 10px", borderRadius: "4px" }}>skill.md ↗</a>
         </nav>
         <div className="cl-container">{children}</div>
       </body>

@@ -18,7 +18,7 @@ export function derive(s) {
   if (llm) blocks.add("llm");
   if (scheduled) blocks.add("engine");
   if (s.scorer) blocks.add("scorer");
-  if (s.state_db.lifecycle && s.state_db.lifecycle !== "none") blocks.add("lifecycle");
+  if (s.state_db.lifecycle && s.state_db.lifecycle !== "none") blocks.add(`lifecycle-${s.state_db.lifecycle}`);
 
   const lifecycleTables = s.state_db.lifecycle === "season" ? ["seasons"] : s.state_db.lifecycle === "round" ? ["rounds"] : [];
   const lifecycleRankingTables = s.state_db.lifecycle === "season" ? ["season_rankings"] : s.state_db.lifecycle === "round" ? ["round_rankings"] : [];

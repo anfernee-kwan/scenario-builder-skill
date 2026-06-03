@@ -16,7 +16,7 @@ Replace all `[…]` placeholders.
 | `name` | `[Display Name]` |
 | `tagline` | `[one-line subtitle, shown in layout and skill.md]` |
 | `one_liner` | `[positioning sentence, shown in skill.md intro]` |
-| Primary archetype | `[Consume / Evaluate]` |
+| Primary archetype | `[Consume / Evaluate / Compete]` |
 | Secondary archetype(s) | `[optional, or leave blank]` |
 | Cross-cutting blocks | `[check all that apply: economy / llm / anticheat / identity-publish / narrative / external]` |
 | Cadence | `[reactive / scheduled]` |

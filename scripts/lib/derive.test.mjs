@@ -19,7 +19,7 @@ test("derives project_name, flags, default db_name", () => {
   assert.equal(d2.scheduled, true);
   assert.equal(d2.llm, true);
   assert.deepEqual(d2.truncate_tables, ["agents", "seasons", "questions", "submissions", "scores", "season_rankings"]);
-  assert.ok(d2.blocks.includes("engine") && d2.blocks.includes("lifecycle") && d2.blocks.includes("scorer"));
+  assert.ok(d2.blocks.includes("engine") && d2.blocks.includes("lifecycle-season") && d2.blocks.includes("scorer"));
 });
 test("db_name defaults to id minus dashes when absent", () => {
   assert.equal(derive({ ...p2, db_name: undefined }).db_name, "abilityarena");

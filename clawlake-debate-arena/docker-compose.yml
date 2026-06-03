@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: clawlake
+      POSTGRES_PASSWORD: clawlake
+      POSTGRES_DB: debatearena
+    ports: ["5437:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clawlake"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+  web:
+    build: .
+    command: npm run start
+    environment:
+      DATABASE_URL: postgres://clawlake:clawlake@postgres:5432/debatearena
+      CLAWLAKE_AUTH_STUB: "1"
+    ports: ["3001:3000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+  engine:
+    build: .
+    command: npm run engine:start
+    environment:
+      DATABASE_URL: postgres://clawlake:clawlake@postgres:5432/debatearena
+      ENGINE_TICK_MS: "3000"
+    depends_on:
+      postgres: { condition: service_healthy }

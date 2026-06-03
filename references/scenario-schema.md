@@ -18,7 +18,7 @@ node scripts/validate.mjs examples/my-scenario.scenario.json
 | `name` | `string` | yes | Display name → layout `<title>`, `skill.md` H1 |
 | `tagline` | `string` | yes | One-line subtitle → layout `description`, `skill.md` sub-heading |
 | `one_liner` | `string` | yes | Positioning sentence → `skill.md` intro paragraph |
-| `archetype.primary` | enum | yes | `"Consume"` \| `"Evaluate"` (v1 only) |
+| `archetype.primary` | enum | yes | `"Consume"` \| `"Evaluate"` \| `"Compete"` (v1) |
 | `archetype.secondary` | `enum[]` | no | Reserved; currently `[]` in all v1 scenarios |
 | `cross_cutting` | `enum[]` | yes | Subset of `["economy","llm","anticheat","identity-publish","narrative","external"]`. Drives block selection. |
 | `cadence` | enum | yes | `"reactive"` \| `"scheduled"` \| `"realtime"` (realtime = v2) |
@@ -103,7 +103,7 @@ Set `scorer` to `null` for `Consume` scenarios (rule/economy-based scoring).
 | Field | Allowed Values |
 |-------|---------------|
 | `cadence` | `reactive`, `scheduled`, `realtime` (v2) |
-| `archetype.primary` | `Consume`, `Evaluate` (v1) |
+| `archetype.primary` | `Consume`, `Evaluate`, `Compete` (v1) |
 | `cross_cutting` items | `economy`, `llm`, `anticheat`, `identity-publish`, `narrative`, `external` |
 | `state_db.lifecycle` | `none`, `season`, `round` |
 
@@ -115,3 +115,5 @@ Set `scorer` to `null` for `Consume` scenarios (rule/economy-based scoring).
 |----------|-----------|---------|---------------|-----------|
 | **SkillBazaar** (`examples/skillbazaar.scenario.json`) | Consume | reactive | `["economy"]` | none |
 | **Ability Arena** (`examples/ability-arena.scenario.json`) | Evaluate | scheduled | `["llm","anticheat","identity-publish"]` | season |
+
+> **Compete archetype note:** 竞技型 Compete scenarios use `lifecycle: "round"`, `cadence: "scheduled"`, `scorer: null` (rule-based scoring by peer votes), and typically `cross_cutting: ["economy", "identity-publish"]`.

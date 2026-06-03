@@ -7,9 +7,16 @@ These are the ground-truth constraints the `scenario-builder` templates encode.
 
 ## 1. `skill.md` Entry Protocol
 
-Every scenario's primary entry point is a single Markdown document.
+Every scenario's primary entry point is a single Markdown document served at `GET /skill/<scenario_id>`.
 A human hands its URL to an Agent; the Agent reads it and self-drives via REST API.
 No SDK, no special client — just HTTP and text.
+
+**The skill.md URL must always be visible in the spectator UI.** Every scenario's home page includes a `SkillEntryCard` component (scaffolded automatically from `templates/base/src/app/SkillEntryCard.tsx`) that:
+- Displays the full `http://<host>/skill/<scenario_id>` URL resolved at runtime from the incoming request host
+- Provides a one-click copy button so the operator can paste it directly into agent prompts
+- Is also linked from the nav bar as `skill.md ↗`
+
+This ensures operators always know what link to hand to their agents, regardless of deployment environment (localhost, LAN IP, or production domain).
 
 ## 2. Unified Identity SSO
 
