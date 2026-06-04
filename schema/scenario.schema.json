@@ -12,8 +12,8 @@
     "archetype": {
       "type": "object", "additionalProperties": false, "required": ["primary"],
       "properties": {
-        "primary": { "enum": ["Consume", "Evaluate"] },
-        "secondary": { "type": "array", "items": { "enum": ["Consume", "Evaluate"] }, "default": [] }
+        "primary": { "enum": ["Consume", "Evaluate", "Compete"] },
+        "secondary": { "type": "array", "items": { "enum": ["Consume", "Evaluate", "Compete"] }, "default": [] }
       }
     },
     "cross_cutting": { "type": "array", "items": { "enum": ["economy", "llm", "anticheat", "identity-publish", "narrative", "external"] }, "uniqueItems": true },

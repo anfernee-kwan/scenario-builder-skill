@@ -16,7 +16,7 @@ Build self-contained ClawLake agent-first scenarios: each is an independent Next
 
 1. **Interview the idea first, one question at a time** — core loop, who the agents are, what actions they take, win/sort/lifecycle, the human spectator view. Do NOT open `examples/*.scenario.json` or start drafting a contract until you understand the idea. The examples are two *specific* scenarios; reaching for them first anchors the new玩法 onto them.
 2. **Pick the `primary` archetype** from `references/archetypes.md` by matching the core loop, and pre-populate that archetype's nine-cell defaults (cadence / scorer / cross-cutting / lifecycle) **from the archetype table — not from the examples.**
-3. **v1-support gate — check NOW, not at schema validation.** v1 implements only **Consume** and **Evaluate** (`archetype.primary` accepts only these two). If the idea's natural archetype is anything else (Compete / Cultivate / Speculate / Social / Express), STOP and tell the user before drafting, then choose a path:
+3. **v1-support gate — check NOW, not at schema validation.** v1 implements **Consume**, **Evaluate**, and **Compete** (`archetype.primary` accepts these three). If the idea's natural archetype is anything else (Cultivate / Speculate / Social / Express), STOP and tell the user before drafting, then choose a path:
    - **Custom escape (usual choice):** declare the closest *implemented* archetype as `primary` — `Evaluate` when there's a judge + scheduled scoring, else `Consume` (reactive) — and plan to Fill the custom loop (see the Custom flow in `references/archetypes.md`). Set `cadence`/`cross_cutting`/`state_db` to fit the *real* idea.
    - **Defer to v2**, or **extend the skill first** (add the archetype to the schema enum + templates — a separate task, not part of building one玩法).
 4. If `archetype.primary === "Evaluate"`: trigger the question-bank suggester (propose prompts + rubrics + `max_score`; user edits before Brief).
@@ -28,7 +28,7 @@ Build self-contained ClawLake agent-first scenarios: each is an independent Next
 **Red flags — Phase 1 is going wrong if:**
 - You opened `examples/*.scenario.json` before understanding the user's idea.
 - You're modeling the new玩法's structure on skillbazaar/ability-arena instead of the idea + `archetypes.md`.
-- You started drafting `scenario.json` for a non-Consume/Evaluate idea without first surfacing the v1-support gate.
+- You started drafting `scenario.json` for a non-Consume/Evaluate/Compete idea without first surfacing the v1-support gate.
 
 ### Phase 2 — Design 设计
 **Who:** Claude + browser preview + user.
@@ -163,6 +163,6 @@ Pages that look like unstyled HTML (white bg + black serif text + bare tables) o
 
 ## What v1 Covers
 
-**Archetypes:** Consume (内容策展型) and Evaluate (能力测评型).
+**Archetypes:** Consume (内容策展型), Evaluate (能力测评型), and Compete (竞技对战型).
 **Cadences:** `reactive` (no engine process) and `scheduled` (engine ticks via `setInterval`).
-**Not in v1:** `realtime` cadence (Redis + worker process) is designed but deferred to v2. The remaining archetypes (Compete / Cultivate / Speculate / Social / Express / Custom) are designed in `references/archetypes.md` but their templates are not yet generated.
+**Not in v1:** `realtime` cadence (Redis + worker process) is designed but deferred to v2. The remaining archetypes (Cultivate / Speculate / Social / Express / Custom) are designed in `references/archetypes.md` but their templates are not yet generated.
