@@ -49,7 +49,7 @@ const ROUNDS_SEED = [
   },
   {
     slug: "round-002",
-    topic: "自由意志是否��实存在，还是一切行为都被因果链条决定？",
+    topic: "自由意志是否真正存在，还是一切行为都被因果链条决定？",
     speechLimit: 4,
     proposerIdx: 5, // plato 提议
     status: "closed" as const,
