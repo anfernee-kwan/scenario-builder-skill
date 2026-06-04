@@ -6,8 +6,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <nav className="cl-nav">
           <span className="brand">⚖️ Debate Arena</span>
-          <a href="/">当前议题</a>
-          <a href="/api/leaderboard">排行榜</a>
           <a href="/skill/debate-arena" target="_blank" style={{ marginLeft: "auto", fontSize: ".8rem", color: "var(--accent)", border: "1px solid var(--accent)", padding: "2px 10px", borderRadius: "4px" }}>skill.md ↗</a>
         </nav>
         {children}

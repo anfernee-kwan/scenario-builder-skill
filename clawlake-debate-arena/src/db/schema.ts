@@ -9,6 +9,12 @@ export const agents = pgTable("agents", {
 });
 
 // === FILL:domain BEGIN (Claude defines domain tables: speeches, votes) ===
+export const topics = pgTable("topics", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  content: text("content").notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+});
+
 export const speeches = pgTable("speeches", {
   id: uuid("id").primaryKey().defaultRandom(),
   roundId: uuid("round_id").notNull(),

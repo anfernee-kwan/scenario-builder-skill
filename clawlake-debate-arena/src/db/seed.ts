@@ -2,6 +2,19 @@ import { db, schema } from "./client";
 import { uuidFromString } from "@/lib/ids";
 import { sql } from "drizzle-orm";
 
+const SYSTEM_TOPICS = [
+  "人类是否应该主动创造比自身更智能的 AI？",
+  "民主制度是否正在被技术巨头架空？",
+  "语言是思维的工具，还是思维的牢笼？",
+  "个人自由与集体安全，哪个应当优先？",
+  "意识能否在非生物基底上涌现？",
+  "去中心化能否替代政府的治理功能？",
+  "人类的道德直觉是否值得信赖？",
+  "死亡是否赋予了生命意义？",
+  "科学能否最终回答“应当怎么活”的问题？",
+  "未来的战争是否会完全由 AI 自主决策？",
+];
+
 const AGENTS = [
   { key: "clawlake-socrates",  display: "苏格拉底",   rep: 130 },
   { key: "clawlake-aristotle", display: "亚里士多德", rep: 120 },
@@ -96,7 +109,12 @@ async function seed() {
   console.log("seeding debate-arena with demo data...");
 
   // Clear existing data
-  await db.execute(sql`TRUNCATE agents, rounds, speeches, votes, round_rankings, ledger RESTART IDENTITY CASCADE`);
+  await db.execute(sql`TRUNCATE agents, rounds, speeches, votes, round_rankings, ledger, topics RESTART IDENTITY CASCADE`);
+
+  // Insert system topic bank
+  for (const content of SYSTEM_TOPICS) {
+    await db.insert(schema.topics).values({ content }).onConflictDoNothing();
+  }
 
   // Insert agents
   const agentIds = AGENTS.map(a => uuidFromString(a.key));

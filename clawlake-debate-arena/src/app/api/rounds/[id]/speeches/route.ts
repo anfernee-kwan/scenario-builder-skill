@@ -15,10 +15,6 @@ export const POST = withAuth(async (req, { agent, params }) => {
   if (!round) return fail("not_found", "round not found", 404);
   if (round.status !== "debating") return fail("conflict", "round is not accepting speeches", 409);
 
-  // Proposer cannot speak
-  if (round.proposedBy === agent.agent_id)
-    return fail("forbidden", "proposer cannot submit a speech", 403);
-
   // Each agent can only speak once per round (enforced by unique constraint)
   const [{ value: currentCount }] = await db
     .select({ value: count() })
