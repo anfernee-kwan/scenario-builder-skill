@@ -1,0 +1,152 @@
+{{!-- Agent lifecycle smoke test — generated for every scenario (Tier-A) --}}
+{{!-- Fill zones: FILL:agent-action-imports, FILL:agent-action, FILL:agent-action-assert --}}
+{{!-- Do NOT remove the idempotent-register and forfeit/teardown stubs --}}
+import { describe, it, expect, beforeEach } from "vitest";
+import { resetDb } from "../helpers/db";
+import { makeReq, readJson } from "../helpers/client";
+import { POST as register } from "@/app/api/identity/register/route";
+import { GET as skillmd } from "@/app/skill/[name]/route";
+import { GET as agentJson } from "@/app/api/.well-known/agent.json/route";
+// === FILL:agent-action-imports BEGIN ===
+// Import the domain route handlers needed to run a complete agent lifecycle.
+// Example (Compete):
+//   import { POST as createRound }   from "@/app/api/rounds/route";
+//   import { GET  as currentRound }  from "@/app/api/rounds/current/route";
+//   import { POST as submitSpeech }  from "@/app/api/rounds/[id]/speeches/route";
+//   import { POST as vote }          from "@/app/api/rounds/[id]/votes/route";
+// Example (Evaluate):
+//   import { GET  as currentSeason } from "@/app/api/seasons/current/route";
+//   import { POST as submit }        from "@/app/api/seasons/[id]/submit/route";
+//   import { tickOnce }              from "@/engine/loop";
+// === FILL:agent-action-imports END ===
+
+const SCENARIO_ID = "{{scenario_id}}";
+
+describe("agent lifecycle smoke: {{name}}", () => {
+  beforeEach(() => resetDb());
+
+  // ── infrastructure ────────────────────────────────────────────────────────
+
+  it("skill.md is reachable and contains scenario_id", async () => {
+    const res = await skillmd(makeReq(`/skill/${SCENARIO_ID}`), {
+      params: Promise.resolve({ name: SCENARIO_ID }),
+    });
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain(SCENARIO_ID);
+  });
+
+  it("agent.json is reachable and lists at least one endpoint", async () => {
+    const res = await agentJson(makeReq("/.well-known/agent.json"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body.endpoints)).toBe(true);
+    expect(body.endpoints.length).toBeGreaterThan(0);
+  });
+
+  // ── registration (idempotency) ────────────────────────────────────────────
+
+  it("register is idempotent — same key returned on second call", async () => {
+    const r1 = await readJson(
+      await register(makeReq("/api/identity/register", { method: "POST", body: { username: "alice" } }))
+    );
+    const r2 = await readJson(
+      await register(makeReq("/api/identity/register", { method: "POST", body: { username: "alice" } }))
+    );
+    expect([200, 201]).toContain(r1.status);
+    expect(r1.body.api_key).toBe(r2.body.api_key);
+    expect(r1.body.agent_id).toBe(r2.body.agent_id);
+  });
+
+  // ── full agent journey ────────────────────────────────────────────────────
+
+  it("complete agent journey: register → action → outcome → leaderboard", async () => {
+    // 1. Register two agents
+    const alice = (
+      await readJson(
+        await register(makeReq("/api/identity/register", { method: "POST", body: { username: "alice" } }))
+      )
+    ).body;
+    const bob = (
+      await readJson(
+        await register(makeReq("/api/identity/register", { method: "POST", body: { username: "bob" } }))
+      )
+    ).body;
+    expect(alice.api_key).toBeTruthy();
+    expect(bob.api_key).toBeTruthy();
+
+    // 2. Read skill.md before acting (agents should always do this)
+    const md = await skillmd(makeReq(`/skill/${SCENARIO_ID}`), {
+      params: Promise.resolve({ name: SCENARIO_ID }),
+    });
+    expect(md.status).toBe(200);
+
+    // === FILL:agent-action BEGIN ===
+    // Implement the full happy-path for one complete lifecycle unit (round / season).
+    // Requirements:
+    //   - Both alice and bob must participate (catches single-agent-only bugs)
+    //   - Cover the primary action endpoint (speech / answer / move / etc.)
+    //   - If scheduled: call tickOnce() and assert on its return value
+    //   - If reactive: assert that the action immediately affects state
+    //   - Assert on the final leaderboard / ranking endpoint
+    //
+    // Example shape (Compete — peer-vote round):
+    //   const { body: round } = await readJson(
+    //     await createRound(makeReq("/api/rounds", { method: "POST", key: alice.api_key,
+    //       body: { topic: "Test topic", speech_limit: 1 } }))
+    //   );
+    //   expect(round.id).toBeTruthy();
+    //
+    //   const speech = await readJson(
+    //     await submitSpeech(
+    //       makeReq(`/api/rounds/${round.id}/speeches`, { method: "POST", key: bob.api_key,
+    //         body: { content: "Bob's argument" } }),
+    //       { params: Promise.resolve({ id: round.id }) }
+    //     )
+    //   );
+    //   expect([200, 201]).toContain(speech.status);
+    //
+    //   // vote (both alice and bob vote)
+    //   for (const key of [alice.api_key, bob.api_key]) {
+    //     await vote(
+    //       makeReq(`/api/rounds/${round.id}/votes`, { method: "POST", key,
+    //         body: { speech_id: speech.body.id } }),
+    //       { params: Promise.resolve({ id: round.id }) }
+    //     );
+    //   }
+    //
+    //   const tick = await tickOnce();
+    //   expect(tick.settled).toBeGreaterThan(0);
+    //
+    //   const { body: lb } = await readJson(await leaderboard(makeReq("/api/leaderboard")));
+    //   expect(lb.standings.length).toBeGreaterThanOrEqual(1);
+    // === FILL:agent-action END ===
+  });
+
+  // ── error boundary: duplicate action ─────────────────────────────────────
+
+  it("duplicate action returns 409 or 422, not 500", async () => {
+    const agent = (
+      await readJson(
+        await register(makeReq("/api/identity/register", { method: "POST", body: { username: "charlie" } }))
+      )
+    ).body;
+
+    // === FILL:agent-action BEGIN (duplicate) ===
+    // Submit the same action twice and assert the second call returns 409 or 422.
+    // Example:
+    //   const first  = await submitSpeech(makeReq(...), ...);
+    //   const second = await submitSpeech(makeReq(...), ...);  // identical payload
+    //   expect([409, 422]).toContain((await readJson(second)).status);
+    void agent; // remove this line once the Fill above is in place
+    // === FILL:agent-action END (duplicate) ===
+  });
+
+  // ── forfeit / teardown (if applicable) ───────────────────────────────────
+
+  // === FILL:agent-action BEGIN (forfeit) ===
+  // If the scenario has a forfeit/leave/resign endpoint, add a test here:
+  //   it("forfeit removes agent from active round", async () => { ... });
+  // If not applicable, delete this comment block.
+  // === FILL:agent-action END (forfeit) ===
+});

@@ -2,7 +2,7 @@
 
 Two gates in the 6-phase pipeline:
 - **Gate 1 — Brief approval** (after Phase 3): `scenario.json` passes schema validation.
-- **Gate 2 — Verify** (after Phase 6): T0 smoke green + design gate passed; optionally full docker stack.
+- **Gate 2 — Verify** (after Phase 6): T0 smoke green + skill.md quality gate + agent smoke gate + design gate passed; optionally full docker stack.
 
 ---
 
@@ -20,7 +20,45 @@ All three must be green. A partial green (e.g., typecheck passes but tests fail)
 If Fill cannot get all three green within 3 attempts, stop and report **BLOCKED / DONE_WITH_CONCERNS**.
 Never submit a scenario with false-green results.
 
-### Design gate (T0 must pass first)
+---
+
+## Gate 2a — skill.md Quality Gate (run after T0 passes)
+
+Before declaring Fill complete, verify the rendered skill.md at `GET /skill/<id>` against this checklist:
+
+| Check | Pass criterion |
+|-------|---------------|
+| **No parameter contradictions** | Every numeric value (rate limit ms, score values, action limits) appears exactly once and is consistent across all sections |
+| **Error codes documented** | The 错误码速查 table has a concrete 409 scenario and a concrete 429 rate-limit value — not placeholders |
+| **Happy-path curl complete** | The 快速开始 section has ≥ 2 curl steps covering the full core action sequence (not just registration) |
+| **Reasoning hint present** | The 推理建议 section has ≥ 1 concrete decision point an agent must check before acting |
+| **Flow section filled** | If Compete: 回合流程 has numbered steps. If Evaluate: 赛季流程 has numbered steps. No `<!-- FILL: ... -->` placeholders remain |
+
+Any `<!-- FILL: ... -->` placeholder remaining in the rendered output = **FAIL**. Fix `src/lib/skillmd.ts` and re-verify.
+
+---
+
+## Gate 2b — Agent Smoke Gate (run after Gate 2a passes)
+
+`tests/e2e/agent.smoke.test.ts` must have all three `FILL:agent-action` zones filled and must pass as part of `npm test`.
+
+Minimum coverage required (enforced by the template structure):
+
+| Test case | What it catches |
+|-----------|----------------|
+| `skill.md reachable + contains scenario_id` | Broken skillmd render, wrong route |
+| `agent.json reachable + lists endpoints` | Scaffold wiring failure |
+| `register is idempotent` | Double-registration bug (common in first deploy) |
+| `complete agent journey` | Full lifecycle: register → action → outcome → leaderboard |
+| `duplicate action returns 409/422` | Missing idempotency guard on core action endpoint |
+
+If the scenario has a forfeit/leave endpoint, the forfeit test case must also be filled.
+
+A `npm test` run that passes without the `FILL:agent-action` zones filled (i.e., the skeleton tests are trivially green) = **FAIL**. The `void agent;` placeholder in the duplicate-action test will cause a lint/typecheck warning as a reminder.
+
+---
+
+## Design gate (required after Gate 2b passes)
 
 After T0 is green, verify the visual output:
 

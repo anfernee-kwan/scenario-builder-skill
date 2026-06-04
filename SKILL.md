@@ -103,7 +103,8 @@ Fill exactly the zones left by the scaffolder (printed in the checklist). Respec
 | Engine tick body | `src/engine/loop.ts` | Skeleton provided by the `engine` block; implement the business logic (score → rank → archive → publish) |
 | Seed data | `src/db/seed.ts` | Render `scorer.question_bank` rows; match column names from schema Fill |
 | UI section components | `src/app/<section>/page.tsx` | One component per `ui_sections` entry; read from DB (or via API route) |
-| skill.md rules prose | `src/lib/skillmd.ts` (or the rendered skill.md partial) | Flesh out the placeholder sections; keep Step 0 identity partial verbatim |
+| skill.md content | `src/lib/skillmd.ts` | Fill all sections: rules prose, flow steps (回合流程/赛季流程), error code details (409 scenario + 429 rate value), reasoning tips, complete happy-path curl. **No `<!-- FILL: ... -->` placeholders may remain in the rendered output.** |
+| Agent smoke test | `tests/e2e/agent.smoke.test.ts` | Fill all three `// === FILL:agent-action ===` zones: imports, journey, duplicate-action assertion. Forfeit test if the scenario has a forfeit endpoint. |
 
 After completing Fill, run T0 smoke before declaring done:
 ```bash
@@ -120,25 +121,38 @@ npm run build       # clean Next.js build
 npm test            # all tests green
 ```
 
+**Gate 2a — skill.md quality (required after T0):**
+Render `GET /skill/<id>` and check against the quality checklist in `references/verification.md`:
+- No `<!-- FILL: ... -->` placeholders remain
+- 错误码速查 has concrete 409 scenario + 429 rate-limit value
+- 推理建议 has ≥ 1 concrete decision point
+- Flow section (回合流程 / 赛季流程) has numbered steps
+- Happy-path curl covers the full core action sequence
+
+**Gate 2b — agent smoke (required after Gate 2a):**
+`tests/e2e/agent.smoke.test.ts` must have all `FILL:agent-action` zones filled and all cases passing. Required cases: skill.md + agent.json reachable, idempotent register, complete journey, duplicate-action returns 409/422.
+
 **Docker stack smoke (optional but recommended before deploying):**
 ```bash
 bash scripts/verify.sh clawlake-<slug>
 ```
 Requires port 3000 free. See `references/verification.md` for setup notes.
 
-**Design gate (required after T0 passes):**
+**Design gate (required after Gate 2b passes):**
 1. Screenshot the key pages of the running app.
 2. Compare side-by-side with `<玩法>/design/chosen.html`.
 3. Run the design quality checklist from `references/design.md`.
 
 Pages that look like unstyled HTML (white bg + black serif text + bare tables) or that do not match the chosen direction = **NOT done**. Fix Fill and re-verify.
 
-**Gate 2:** T0 green + design gate passed = DONE. If Fill cannot get T0 green in **3 attempts**, stop and report **BLOCKED / DONE_WITH_CONCERNS** — never ship false-green.
+**Gate 2:** T0 green + Gate 2a + Gate 2b + design gate passed = DONE. If Fill cannot get T0 green in **3 attempts**, stop and report **BLOCKED / DONE_WITH_CONCERNS** — never ship false-green.
 
 **Red flags — doing it wrong if:**
 - Skipped the Design phase and went straight to Fill UI without a chosen direction.
 - Offered only one design direction (never enough to make a real choice).
 - Pages render as raw unstyled HTML — no palette, no tokens, no `.cl-*` primitives applied.
+- `<!-- FILL: ... -->` placeholders remain in the rendered skill.md output.
+- `tests/e2e/agent.smoke.test.ts` FILL zones are empty and tests pass trivially.
 
 ---
 
