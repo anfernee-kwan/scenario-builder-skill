@@ -1,0 +1,136 @@
+{{!-- Agent lifecycle smoke test — generated for every scenario (Tier-A) --}}
+{{!-- Fill zones: FILL:agent-action-imports, FILL:agent-action, FILL:agent-action-assert --}}
+{{!-- Do NOT remove the idempotent-register and forfeit/teardown stubs --}}
+import { describe, it, expect, beforeEach } from "vitest";
+import { resetDb } from "../helpers/db";
+import { makeReq, readJson } from "../helpers/client";
+import { POST as register } from "@/app/api/identity/register/route";
+import { GET as skillmd } from "@/app/skill/[name]/route";
+import { GET as agentJson } from "@/app/api/.well-known/agent.json/route";
+// === FILL:agent-action-imports BEGIN ===
+// Import the domain route handlers needed to run a complete agent lifecycle.
+// Example (Compete):
+//   import { POST as createRound }   from "@/app/api/rounds/route";
+//   import { GET  as currentRound }  from "@/app/api/rounds/current/route";
+//   import { POST as submitSpeech }  from "@/app/api/rounds/[id]/speeches/route";
+//   import { POST as vote }          from "@/app/api/rounds/[id]/votes/route";
+// Example (Evaluate):
+//   import { GET  as currentSeason } from "@/app/api/seasons/current/route";
+//   import { POST as submit }        from "@/app/api/seasons/[id]/submit/route";
+//   import { tickOnce }              from "@/engine/loop";
+// === FILL:agent-action-imports END ===
+
+const SCENARIO_ID = "{{scenario_id}}";
+
+describe("agent lifecycle smoke: {{name}}", () => {
+  beforeEach(() => resetDb());
+
+  // ── infrastructure ────────────────────────────────────────────────────────
+
+  it("skill.md is reachable and contains scenario_id", async () => {
+    const res = await skillmd(makeReq(`/skill/${SCENARIO_ID}`), {
+      params: Promise.resolve({ name: SCENARIO_ID }),
+    });
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain(SCENARIO_ID);
+  });
+
+  it("agent.json is reachable and lists at least one endpoint", async () => {
+    const res = await agentJson(makeReq("/.well-known/agent.json"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body.endpoints)).toBe(true);
+    expect(body.endpoints.length).toBeGreaterThan(0);
+  });
+
+  // ── registration (idempotency) ────────────────────────────────────────────
+
+  it("register is idempotent — same key returned on second call", async () => {
+    const r1 = await readJson(
+      await register(makeReq("/api/identity/register", { method: "POST", body: { username: "alice" } }))
+    );
+    const r2 = await readJson(
+      await register(makeReq("/api/identity/register", { method: "POST", body: { username: "alice" } }))
+    );
+    expect([200, 201]).toContain(r1.status);
+    expect(r1.body.api_key).toBe(r2.body.api_key);
+    expect(r1.body.agent_id).toBe(r2.body.agent_id);
+  });
+
+  // ── full agent journey ────────────────────────────────────────────────────
+
+  it("complete agent journey: register → action → outcome → leaderboard", async () => {
+    // 1. Register two agents
+    const alice = (
+      await readJson(
+        await register(makeReq("/api/identity/register", { method: "POST", body: { username: "alice" } }))
+      )
+    ).body;
+    const bob = (
+      await readJson(
+        await register(makeReq("/api/identity/register", { method: "POST", body: { username: "bob" } }))
+      )
+    ).body;
+    expect(alice.api_key).toBeTruthy();
+    expect(bob.api_key).toBeTruthy();
+
+    // 2. Read skill.md before acting (agents should always do this)
+    const md = await skillmd(makeReq(`/skill/${SCENARIO_ID}`), {
+      params: Promise.resolve({ name: SCENARIO_ID }),
+    });
+    expect(md.status).toBe(200);
+
+    // === FILL:agent-action BEGIN ===
+    // REQUIRED: implement the full happy-path for one complete lifecycle unit.
+    // This assertion fires until the FILL zone is replaced with real code:
+    expect.fail(
+      "FILL REQUIRED — replace this block with the complete agent journey.\n" +
+      "Requirements:\n" +
+      "  - Both alice and bob must participate\n" +
+      "  - Cover the primary action endpoint\n" +
+      "  - If scheduled: call tickOnce() and assert its return value\n" +
+      "  - If reactive: assert the action immediately affects state\n" +
+      "  - Assert on the final leaderboard / ranking endpoint\n" +
+      "See templates/base/tests/e2e/agent.smoke.test.ts.hbs for an example."
+    );
+    // Example shape (Compete — peer-vote round):
+    //   const { body: round } = await readJson(
+    //     await createRound(makeReq("/api/rounds", { method: "POST", key: alice.api_key,
+    //       body: { topic: "Test topic", speech_limit: 1 } }))
+    //   );
+    //   expect(round.id).toBeTruthy();
+    //   ...
+    // === FILL:agent-action END ===
+  });
+
+  // ── error boundary: duplicate action ─────────────────────────────────────
+
+  it("duplicate action returns 409 or 422, not 500", async () => {
+    const agent = (
+      await readJson(
+        await register(makeReq("/api/identity/register", { method: "POST", body: { username: "charlie" } }))
+      )
+    ).body;
+
+    // === FILL:agent-action BEGIN (duplicate) ===
+    // REQUIRED: submit the same action twice and assert the second returns 409 or 422.
+    // This assertion fires until the FILL zone is replaced:
+    expect.fail(
+      "FILL REQUIRED — implement the duplicate-action test.\n" +
+      "Submit the core action twice with the same payload and assert:\n" +
+      "  expect([409, 422]).toContain(secondResponse.status);\n" +
+      "This catches missing idempotency guards on the core action endpoint."
+    );
+    void agent; // suppress unused-variable warning until FILL is done
+    // === FILL:agent-action END (duplicate) ===
+  });
+
+  // ── forfeit / teardown (if applicable) ───────────────────────────────────
+
+  // === FILL:agent-action BEGIN (forfeit) ===
+  // If the scenario has a forfeit/leave/resign endpoint, add a test here:
+  //   it("forfeit removes agent from active round", async () => { ... });
+  // If not applicable, delete this comment block.
+  // === FILL:agent-action END (forfeit) ===
+});

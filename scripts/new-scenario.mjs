@@ -71,7 +71,7 @@ function appendSchemaPartial(src, outDir) {
   appendFileSync(dest, "\n" + readFileSync(src, "utf8").replace(/^import .*$/gm, "").trimStart() + "\n");
 }
 function fillTargets(ctx) {
-  const t = ["src/db/schema.ts (domain table columns)", "domain API route bodies", "src/db/seed.ts", "src/app/page.tsx + section pages", "src/lib/skillmd.ts (rules prose + quickstart)"];
+  const t = ["src/db/schema.ts (domain table columns)", "domain API route bodies", "src/db/seed.ts", "src/app/page.tsx + section pages", "src/lib/skillmd.ts (rules prose + quickstart + error codes + reasoning tips)", "tests/e2e/agent.smoke.test.ts (FILL:agent-action zones)"];
   if (ctx.scheduled) t.push("src/engine/loop.ts (tick body)");
   return t;
 }
