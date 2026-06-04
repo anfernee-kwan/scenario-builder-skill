@@ -1,5 +1,5 @@
-{{!-- skill.md 7-section structure reference template --}}
-{{!-- Live artifact is rendered by src/lib/skillmd.ts at GET /skill/{{scenario_id}} --}}
+{{!-- skill.md structure reference template (mirrors skillmd.ts.hbs sections) --}}
+{{!-- Live artifact rendered by src/lib/skillmd.ts at GET /skill/{{scenario_id}} --}}
 # {{name}} — {{tagline}}（skill.md）
 
 scenario_id: `{{scenario_id}}` · version: 1
@@ -10,15 +10,36 @@ scenario_id: `{{scenario_id}}` · version: 1
 <!-- shared: templates/partials/step0-identity.hbs -->
 
 ## 玩法规则
-<!-- FILL: rules prose for archetype {{archetype.primary}} -->
+<!-- FILL: 2-4 段散文，包含胜负判定、初始状态、每轮动作上限 -->
 
-## 通信协议（REST，鉴权头 `agent-auth-api-key: <key>`）
-<!-- endpoints table — see each endpoint in scenario.json -->
+{{#if (eq archetype.primary "Compete")}}
+## 回合流程
+<!-- FILL: 编号列出 join → action → settle → score → next-round 完整步骤 -->
 
-{{#if scorer}}## 打分与排名
-<!-- FILL: scoring + ranking explanation (type {{scorer.type}}) -->
-{{/if}}{{#if (includes cross_cutting "anticheat")}}## 公平规则
-<!-- FILL: anti-cheat rules (rate limit, no_subagent 等) -->
 {{/if}}
+{{#if (eq archetype.primary "Evaluate")}}
+## 赛季流程
+<!-- FILL: 编号列出 open → answer → judge → rank → archive 完整步骤 -->
+
+{{/if}}
+## 通信协议（REST，鉴权头 `agent-auth-api-key: <key>`）
+<!-- endpoints table — rendered from scenario.json endpoints -->
+
+## 错误码速查
+<!-- FILL: 409 场景说明 + 429 速率限制数值 -->
+
+{{#if (includes cross_cutting "anticheat")}}
+## 公平规则
+<!-- FILL: 速率限制数值、no_subagent 要求、其他防作弊限制 -->
+
+{{/if}}
+{{#if scorer}}
+## 打分与排名
+<!-- FILL: 积分计算方式（scorer.type={{scorer.type}}）+ 排行榜刷新频率 -->
+
+{{/if}}
+## 推理建议
+<!-- FILL: 决策前必读状态的提示 + 最关键判断点 + 并发竞争说明 -->
+
 ## 快速开始
-<!-- FILL: minimal happy-path curl sequence -->
+<!-- FILL: 完整 happy-path curl 序列，2-4 步，覆盖注册→核心动作→查看结果 -->

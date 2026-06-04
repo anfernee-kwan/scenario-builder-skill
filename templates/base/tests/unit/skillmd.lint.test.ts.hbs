@@ -1,0 +1,67 @@
+{{!-- skill.md quality lint — runs inside vitest, no server needed --}}
+{{!-- Tier-A: generated for every scenario. DO NOT delete. --}}
+{{!-- This test is intentionally strict: it will fail until skillmd.ts is fully filled. --}}
+import { describe, it, expect } from "vitest";
+import { renderSkillMd } from "@/lib/skillmd";
+
+const md = renderSkillMd("http://localhost:3000");
+
+describe("skill.md quality gate (Gate 2a)", () => {
+  it("no FILL placeholders remain in rendered output", () => {
+    const placeholders = [...md.matchAll(/<!--\s*FILL[^>]*-->/g)].map((m) => m[0].slice(0, 100));
+    expect(placeholders, `Unfilled placeholders found:\n${placeholders.join("\n")}`).toHaveLength(0);
+  });
+
+  it("错误码速查: 409 row has a concrete description (not just a dash)", () => {
+    // Must contain "409" followed by non-trivial content on the same table row
+    expect(md).toMatch(/409[^\n|]{5,}/);
+  });
+
+  it("错误码速查: 429 row includes a concrete rate-limit number", () => {
+    // Must contain "429" followed by a number + unit (ms / 秒 / s / 毫秒)
+    expect(md).toMatch(/429[^\n]*\d+\s*(ms|毫秒|秒|s\b)/i);
+  });
+
+  it("推理建议 section has real content (≥ 20 chars)", () => {
+    const match = md.match(/##\s*推理建议\n+([\s\S]*?)(?=\n##\s|$)/);
+    expect(match, "推理建议 section not found in skill.md").toBeTruthy();
+    const body = (match![1] ?? "").trim();
+    expect(
+      body.length,
+      `推理建议 is empty or too short (${body.length} chars). Add at least one concrete decision point.`
+    ).toBeGreaterThanOrEqual(20);
+  });
+
+  it("快速开始 section has ≥ 2 curl calls (registration + core action)", () => {
+    const match = md.match(/##\s*快速开始[\s\S]*?```[\s\S]*?```/);
+    expect(match, "快速开始 code block not found").toBeTruthy();
+    const curlCount = (match![0].match(/curl /g) ?? []).length;
+    expect(
+      curlCount,
+      `快速开始 has only ${curlCount} curl call(s) — need ≥ 2 (registration + at least one core action)`
+    ).toBeGreaterThanOrEqual(2);
+  });
+
+{{#if (eq archetype.primary "Compete")}}
+  it("回合流程 section exists and has numbered steps", () => {
+    expect(md).toContain("## 回合流程");
+    const match = md.match(/##\s*回合流程\n+([\s\S]*?)(?=\n##\s|$)/);
+    const body = (match?.[1] ?? "").trim();
+    // Must have at least one numbered list item
+    expect(body).toMatch(/^\d+\.\s/m);
+  });
+{{/if}}
+{{#if (eq archetype.primary "Evaluate")}}
+  it("赛季流程 section exists and has numbered steps", () => {
+    expect(md).toContain("## 赛季流程");
+    const match = md.match(/##\s*赛季流程\n+([\s\S]*?)(?=\n##\s|$)/);
+    const body = (match?.[1] ?? "").trim();
+    expect(body).toMatch(/^\d+\.\s/m);
+  });
+{{/if}}
+
+  it("scenario_id and base_url appear in output", () => {
+    expect(md).toContain("{{scenario_id}}");
+    expect(md).toContain("http://localhost:3000");
+  });
+});
