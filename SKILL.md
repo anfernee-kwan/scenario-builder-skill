@@ -122,15 +122,10 @@ npm test            # all tests green
 ```
 
 **Gate 2a — skill.md quality (required after T0):**
-Render `GET /skill/<id>` and check against the quality checklist in `references/verification.md`:
-- No `<!-- FILL: ... -->` placeholders remain
-- 错误码速查 has concrete 409 scenario + 429 rate-limit value
-- 推理建议 has ≥ 1 concrete decision point
-- Flow section (回合流程 / 赛季流程) has numbered steps
-- Happy-path curl covers the full core action sequence
+`tests/unit/skillmd.lint.test.ts` runs as part of `npm test` and **fails by default** until all sections in `src/lib/skillmd.ts` are fully filled. It checks: no `<!-- FILL -->` placeholders remain, 错误码速查 has concrete 409 + 429 values, 推理建议 has real content, 快速开始 has ≥ 2 curl calls, flow section has numbered steps.
 
 **Gate 2b — agent smoke (required after Gate 2a):**
-`tests/e2e/agent.smoke.test.ts` must have all `FILL:agent-action` zones filled and all cases passing. Required cases: skill.md + agent.json reachable, idempotent register, complete journey, duplicate-action returns 409/422.
+`tests/e2e/agent.smoke.test.ts` journey and duplicate-action tests contain `expect.fail()` and **fail by default** until `FILL:agent-action` zones are replaced. `npm test` cannot be green until all FILL zones are done.
 
 **Docker stack smoke (optional but recommended before deploying):**
 ```bash
@@ -151,8 +146,8 @@ Pages that look like unstyled HTML (white bg + black serif text + bare tables) o
 - Skipped the Design phase and went straight to Fill UI without a chosen direction.
 - Offered only one design direction (never enough to make a real choice).
 - Pages render as raw unstyled HTML — no palette, no tokens, no `.cl-*` primitives applied.
-- `<!-- FILL: ... -->` placeholders remain in the rendered skill.md output.
-- `tests/e2e/agent.smoke.test.ts` FILL zones are empty and tests pass trivially.
+- `<!-- FILL: ... -->` placeholders remain in the rendered skill.md output — `npm test` will catch this via `skillmd.lint.test.ts`.
+- `tests/e2e/agent.smoke.test.ts` FILL zones are not filled — `expect.fail()` will prevent `npm test` from going green.
 
 ---
 

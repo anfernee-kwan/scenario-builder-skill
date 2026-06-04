@@ -82,44 +82,25 @@ describe("agent lifecycle smoke: {{name}}", () => {
     expect(md.status).toBe(200);
 
     // === FILL:agent-action BEGIN ===
-    // Implement the full happy-path for one complete lifecycle unit (round / season).
-    // Requirements:
-    //   - Both alice and bob must participate (catches single-agent-only bugs)
-    //   - Cover the primary action endpoint (speech / answer / move / etc.)
-    //   - If scheduled: call tickOnce() and assert on its return value
-    //   - If reactive: assert that the action immediately affects state
-    //   - Assert on the final leaderboard / ranking endpoint
-    //
+    // REQUIRED: implement the full happy-path for one complete lifecycle unit.
+    // This assertion fires until the FILL zone is replaced with real code:
+    expect.fail(
+      "FILL REQUIRED — replace this block with the complete agent journey.\n" +
+      "Requirements:\n" +
+      "  - Both alice and bob must participate\n" +
+      "  - Cover the primary action endpoint\n" +
+      "  - If scheduled: call tickOnce() and assert its return value\n" +
+      "  - If reactive: assert the action immediately affects state\n" +
+      "  - Assert on the final leaderboard / ranking endpoint\n" +
+      "See templates/base/tests/e2e/agent.smoke.test.ts.hbs for an example."
+    );
     // Example shape (Compete — peer-vote round):
     //   const { body: round } = await readJson(
     //     await createRound(makeReq("/api/rounds", { method: "POST", key: alice.api_key,
     //       body: { topic: "Test topic", speech_limit: 1 } }))
     //   );
     //   expect(round.id).toBeTruthy();
-    //
-    //   const speech = await readJson(
-    //     await submitSpeech(
-    //       makeReq(`/api/rounds/${round.id}/speeches`, { method: "POST", key: bob.api_key,
-    //         body: { content: "Bob's argument" } }),
-    //       { params: Promise.resolve({ id: round.id }) }
-    //     )
-    //   );
-    //   expect([200, 201]).toContain(speech.status);
-    //
-    //   // vote (both alice and bob vote)
-    //   for (const key of [alice.api_key, bob.api_key]) {
-    //     await vote(
-    //       makeReq(`/api/rounds/${round.id}/votes`, { method: "POST", key,
-    //         body: { speech_id: speech.body.id } }),
-    //       { params: Promise.resolve({ id: round.id }) }
-    //     );
-    //   }
-    //
-    //   const tick = await tickOnce();
-    //   expect(tick.settled).toBeGreaterThan(0);
-    //
-    //   const { body: lb } = await readJson(await leaderboard(makeReq("/api/leaderboard")));
-    //   expect(lb.standings.length).toBeGreaterThanOrEqual(1);
+    //   ...
     // === FILL:agent-action END ===
   });
 
@@ -133,12 +114,15 @@ describe("agent lifecycle smoke: {{name}}", () => {
     ).body;
 
     // === FILL:agent-action BEGIN (duplicate) ===
-    // Submit the same action twice and assert the second call returns 409 or 422.
-    // Example:
-    //   const first  = await submitSpeech(makeReq(...), ...);
-    //   const second = await submitSpeech(makeReq(...), ...);  // identical payload
-    //   expect([409, 422]).toContain((await readJson(second)).status);
-    void agent; // remove this line once the Fill above is in place
+    // REQUIRED: submit the same action twice and assert the second returns 409 or 422.
+    // This assertion fires until the FILL zone is replaced:
+    expect.fail(
+      "FILL REQUIRED — implement the duplicate-action test.\n" +
+      "Submit the core action twice with the same payload and assert:\n" +
+      "  expect([409, 422]).toContain(secondResponse.status);\n" +
+      "This catches missing idempotency guards on the core action endpoint."
+    );
+    void agent; // suppress unused-variable warning until FILL is done
     // === FILL:agent-action END (duplicate) ===
   });
 
