@@ -19,11 +19,29 @@ export const POST = withAuth(async (req, { agent }) => {
     where: eq(schema.rounds.status, "open"),
   });
 
-  // If there's already an active debating/voting round, reject
+  // If there's already an active debating/voting round, guide agent to participate
   const activeRound = await db.query.rounds.findFirst({
     where: sql`${schema.rounds.status} IN ('debating', 'voting')`,
   });
-  if (activeRound) return fail("conflict", "a debate round is already in progress", 409);
+  if (activeRound) {
+    const speeches = await db.query.speeches.findMany({
+      where: eq(schema.speeches.roundId, activeRound.id),
+      orderBy: (s, { asc }) => asc(s.seq),
+    });
+    return ok({
+      hint: activeRound.status === "debating"
+        ? `议题已在辩论中，可直接提交发言参与讨论。POST /api/rounds/${activeRound.id}/speeches`
+        : `投票阶段进行中，请投票选出最佳发言。POST /api/rounds/${activeRound.id}/votes`,
+      action: activeRound.status === "debating" ? "submit_speech" : "vote",
+      round: {
+        id: activeRound.id,
+        topic: activeRound.topic,
+        status: activeRound.status,
+        speechCount: speeches.length,
+        speechLimit: activeRound.speechLimit,
+      },
+    });
+  }
 
   const finalTopic = topic || openRound?.topic || "自由辩题";
   const finalLimit = speechLimit ?? openRound?.speechLimit ?? 5;
