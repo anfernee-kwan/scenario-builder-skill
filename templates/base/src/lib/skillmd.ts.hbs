@@ -1,5 +1,4 @@
 export function renderSkillMd(baseUrl: string): string {
-  const id = baseUrl;
   return `# {{name}} — {{tagline}}（skill.md）
 
 scenario_id: \`{{scenario_id}}\` · base_url: ${baseUrl} · version: 1
@@ -9,22 +8,90 @@ scenario_id: \`{{scenario_id}}\` · base_url: ${baseUrl} · version: 1
 {{> step0-identity}}
 
 ## 玩法规则
-<!-- FILL: rules prose for archetype {{archetype.primary}} -->
 
-## 通信协议（REST，鉴权头 \`agent-auth-api-key: <key>\`）
-| 方法 | 路径 | 用途 |
-|---|---|---|
-{{#each endpoints}}| {{this.method}} | ${baseUrl}{{this.path}}{{#if this.query}}?{{this.query}}{{/if}} | {{this.summary}}{{#unless this.auth}}（免鉴权）{{/unless}} |
-{{/each}}
-{{#if scorer}}## 打分与排名
-<!-- FILL: scoring + ranking explanation (type {{scorer.type}}) -->
-{{/if}}{{#if (includes cross_cutting "anticheat")}}## 公平规则
-<!-- FILL: anti-cheat rules (rate limit, no_subagent 等) -->
+<!-- FILL: 用 2-4 段散文描述核心玩法，必须包含：
+  - 胜负/排名判定标准
+  - 初始状态（初始积分/资源/生命等）
+  - 每个 agent 每轮/每季度可做的动作数量上限
+-->
+
+{{#if (eq archetype.primary "Compete")}}
+## 回合流程
+
+<!-- FILL: 按编号列出一轮完整的生命周期，格式如下（根据实际 API 替换）：
+  1. **加入/抢占**：描述如何发起或加入一个 round
+  2. **行动阶段**：描述 agent 可提交的核心动作及限制
+  3. **结算触发**：说明结算由谁/何时触发（engine tick / 条件满足）
+  4. **得分规则**：说明得分计算方式（投票/规则/裁判）
+  5. **新轮次**：说明上一轮结束后如何进入下一轮
+-->
+
 {{/if}}
+{{#if (eq archetype.primary "Evaluate")}}
+## 赛季流程
+
+<!-- FILL: 按编号列出一个赛季完整的生命周期：
+  1. **开放**：说明赛季如何开放（engine 触发 / 管理员 / 自动）
+  2. **作答**：agent 提交答案的方式、字段、幂等约束
+  3. **判题**：说明 engine tick 何时关闭赛季并触发 LLM judge
+  4. **排名**：说明积分聚合与排名发布时机
+  5. **归档**：说明历史赛季可在何处查看
+-->
+
+{{/if}}
+## 通信协议（REST，鉴权头 \`agent-auth-api-key: <key>\`）
+
+| 方法 | 路径 | 认证 | 用途 |
+|------|------|------|------|
+{{#each endpoints}}| {{this.method}} | ${baseUrl}{{this.path}}{{#if this.query}}?{{this.query}}{{/if}} | {{#if this.auth}}✓{{else}}—{{/if}} | {{this.summary}} |
+{{/each}}
+
+## 错误码速查
+
+| 状态码 | 含义 | 常见原因 |
+|--------|------|----------|
+| 401 | 未授权 | \`agent-auth-api-key\` 缺失或格式错误 |
+| 403 | 禁止 | 不是合法参与者，或违反公平规则 |
+| 409 | 状态冲突 | <!-- FILL: 说明本玩法最常见的 409 场景，例如"轮次未开放"或"已提交过" --> |
+| 422 | 参数错误 | 请求体字段缺失或类型不符 |
+| 429 | 频率超限 | <!-- FILL: 说明本玩法的速率限制值，例如"每 agent 每 N 秒最多 1 次" --> |
+
+{{#if (includes cross_cutting "anticheat")}}
+## 公平规则
+
+<!-- FILL: 列出具体约束，必须包含：
+  - 速率限制数值（每 N 毫秒/秒最多 M 次）
+  - no_subagent 声明要求（如适用）
+  - 其他防作弊限制
+-->
+
+{{/if}}
+{{#if scorer}}
+## 打分与排名
+
+<!-- FILL: 说明积分如何计算（scorer.type = {{scorer.type}}），以及排行榜刷新频率 -->
+
+{{/if}}
+## 推理建议
+
+<!-- FILL: 给 agent 的决策提示，必须包含：
+  - 在何处需要读取状态再决策（避免盲目行动）
+  - 最关键的一到两个判断点（例如"先检查当前轮次状态再决定是否抢占提议权"）
+  - 并发竞争提示（多个 agent 同时行动时的预期行为）
+-->
+
 ## 快速开始
-\`\`\`
-KEY=$(curl -s -X POST ${id}/api/identity/register -d '{"username":"demo"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["api_key"])')
-<!-- FILL: minimal happy-path curl sequence from endpoints -->
+
+\`\`\`bash
+# 1. 注册身份（已有 key 跳过）
+KEY=$(curl -s -X POST ${baseUrl}/api/identity/register \\
+  -H 'content-type: application/json' \\
+  -d '{"username":"my_agent"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["api_key"])')
+
+# FILL: 2. 按玩法顺序补充 2-4 步 curl，覆盖完整 happy-path：
+#   - 读取当前状态
+#   - 提交核心动作
+#   - （如适用）查看排行榜
 \`\`\`
 `;
 }
