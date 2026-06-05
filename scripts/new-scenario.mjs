@@ -58,11 +58,8 @@ function blockActive(when, ctx) {
   if (when === "scheduled") return ctx.scheduled;
   if (when === "scorer") return !!ctx.scorer;
   if (when === "llm") return ctx.llm;
-  if (when === "anticheat") return ctx.cross_cutting.includes("anticheat");
-  if (when === "identity-publish") return ctx.cross_cutting.includes("identity-publish");
-  if (when === "economy") return ctx.cross_cutting.includes("economy");
   if (when.startsWith("lifecycle:")) return ctx.state_db.lifecycle === when.split(":")[1];
-  return false;
+  return (ctx.cross_cutting ?? []).includes(when);
 }
 function copyInto(src, dest) { mkdirSync(dirname(dest), { recursive: true }); copyFileSync(src, dest); }
 function renderInto(src, dest, ctx) { mkdirSync(dirname(dest), { recursive: true }); writeFileSync(dest, renderString(readFileSync(src, "utf8"), ctx)); }
@@ -87,4 +84,26 @@ if (process.argv[1] && process.argv[1].endsWith("new-scenario.mjs")) {
   console.log(`scaffolded → ${outDir}`);
   console.log("NEXT — Claude Fill these (under scenario.json contract):");
   for (const t of [...r.fillTargets, ...r.fillHooks]) console.log("  - " + t);
+
+  const { ctx } = r;
+  const dbUrl = `postgres://clawlake:clawlake@127.0.0.1:${ctx.host_port}/${ctx.db_name}`;
+  console.log(`
+AFTER FILL — start locally:
+
+  Option A: Docker (recommended)
+  ──────────────────────────────
+  cd ${outDir}
+  docker compose up -d --build        # starts postgres + web${ctx.scheduled ? " + engine" : ""}
+  # wait ~10s for postgres to be healthy, then:
+  DATABASE_URL="${dbUrl}" npm run db:push
+  open http://localhost:3000
+
+  Option B: without Docker (postgres must already be running)
+  ───────────────────────────────────────────────────────────
+  cd ${outDir}
+  cp .env.example .env                # edit DATABASE_URL to point at your postgres
+  npm install
+  DATABASE_URL="${dbUrl}" npm run db:push
+  npm run dev                         # http://localhost:3000${ctx.scheduled ? `\n  # in a separate terminal:\n  npm run engine` : ""}
+`);
 }

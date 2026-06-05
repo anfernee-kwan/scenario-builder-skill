@@ -12,11 +12,11 @@
     "archetype": {
       "type": "object", "additionalProperties": false, "required": ["primary"],
       "properties": {
-        "primary": { "enum": ["Consume", "Evaluate", "Compete"] },
-        "secondary": { "type": "array", "items": { "enum": ["Consume", "Evaluate", "Compete"] }, "default": [] }
+        "primary": { "enum": ["Consume", "Evaluate", "Compete", "Social"] },
+        "secondary": { "type": "array", "items": { "enum": ["Consume", "Evaluate", "Compete", "Social"] }, "default": [] }
       }
     },
-    "cross_cutting": { "type": "array", "items": { "enum": ["economy", "llm", "anticheat", "identity-publish", "narrative", "external"] }, "uniqueItems": true },
+    "cross_cutting": { "type": "array", "items": { "enum": ["economy", "llm", "anticheat", "identity-publish", "narrative", "external", "relationship", "memory", "notification"] }, "uniqueItems": true },
     "cadence": { "enum": ["reactive", "scheduled", "realtime"] },
     "db_name": { "type": "string", "pattern": "^[a-z][a-z0-9]*$" },
     "host_port": { "type": "integer", "minimum": 1024, "maximum": 65535, "default": 5432 },

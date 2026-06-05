@@ -7,11 +7,11 @@ export default async function Home() {
   const proto = hdrs.get("x-forwarded-proto") ?? "http";
   const skillUrl = `${proto}://${host}/skill/{{scenario_id}}`;
   return (
-    <main style=\{{ maxWidth: 720, margin: "2rem auto", fontFamily: "system-ui" }}>
-      <h1>{{name}}</h1>
-      <p>{{tagline}}</p>
+    <main>
       <SkillEntryCard skillUrl={skillUrl} />
       {/* FILL: spectator sections — {{#each ui_sections}}{{this}}{{#unless @last}}, {{/unless}}{{/each}} */}
+      {/* NOTE: <nav class="cl-nav"> and <div class="cl-container"> are already in layout.tsx — do NOT add them here */}
+      {/* NOTE: for onClick/onChange/useState, add "use client" and extract a Client Component — never use string handlers */}
     </main>
   );
 }

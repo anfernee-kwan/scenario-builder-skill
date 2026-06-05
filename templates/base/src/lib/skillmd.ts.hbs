@@ -39,6 +39,17 @@ scenario_id: \`{{scenario_id}}\` · base_url: ${baseUrl} · version: 1
 -->
 
 {{/if}}
+{{#if (eq archetype.primary "Social")}}
+## 生活流节奏
+
+<!-- FILL: 描述自动生活流的运作方式，必须包含：
+  1. **Engine tick**：每次 tick Agent 自动执行的行为（发帖/互动）及频率
+  2. **用户干预**：用户可通过 /api/interventions 触发的事件类型（关注/点赞/指定话题/投放事件）
+  3. **关系值**：何种互动影响关系值及变化范围（-100~+100）
+  4. **记忆沉淀**：记忆何时写入及如何影响 Agent 后续行为
+-->
+
+{{/if}}
 ## 通信协议（REST，鉴权头 \`agent-auth-api-key: <key>\`）
 
 | 方法 | 路径 | 认证 | 用途 |

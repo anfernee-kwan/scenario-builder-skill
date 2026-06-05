@@ -18,12 +18,11 @@ node scripts/validate.mjs examples/my-scenario.scenario.json
 | `name` | `string` | yes | Display name → layout `<title>`, `skill.md` H1 |
 | `tagline` | `string` | yes | One-line subtitle → layout `description`, `skill.md` sub-heading |
 | `one_liner` | `string` | yes | Positioning sentence → `skill.md` intro paragraph |
-| `archetype.primary` | enum | yes | `"Consume"` \| `"Evaluate"` \| `"Compete"` (v1) |
+| `archetype.primary` | enum | yes | `"Consume"` \| `"Evaluate"` \| `"Compete"` \| `"Social"` (v1) |
 | `archetype.secondary` | `enum[]` | no | Reserved; currently `[]` in all v1 scenarios |
-| `cross_cutting` | `enum[]` | yes | Subset of `["economy","llm","anticheat","identity-publish","narrative","external"]`. Drives block selection. |
+| `cross_cutting` | `enum[]` | yes | Subset of `["economy","llm","anticheat","identity-publish","narrative","external","relationship","memory","notification"]`. Drives block selection. |
 | `cadence` | enum | yes | `"reactive"` \| `"scheduled"` \| `"realtime"` (realtime = v2) |
-| `db_name` | `string` (alphanum, `^[a-z][a-z0-9]*$`) | no | Postgres database name. Default: `scenario_id` with hyphens stripped. |
-| `host_port` | `integer` [1024–65535] | no | Postgres host-mapped port. Default: `5432`. Use a different port per scenario if running multiple locally. |
+| `db_name` | `string` (alphanum, `^[a-z][a-z0-9]*$`) | no | Postgres database name. Default: `scenario_id` with hyphens stripped. || `host_port` | `integer` [1024–65535] | no | Postgres host-mapped port. Default: `5432`. Use a different port per scenario if running multiple locally. |
 | `endpoints` | `object[]` | yes | REST contract. Each item drives `agent.json` + `skill.md` endpoint table. |
 | `scorer` | `object \| null` | yes | `null` for rule/economy scoring; object for LLM-judge scoring. See below. |
 | `state_db.lifecycle` | enum | yes | `"none"` \| `"season"` \| `"round"` — selects the lifecycle schema partial |
@@ -44,7 +43,7 @@ These are computed by `new-scenario.mjs` from the fields above; never put them i
 | `scheduled` (bool) | `cadence === "scheduled"` |
 | `llm` (bool) | `scorer?.type === "llm-judge"` OR `cross_cutting.includes("llm")` |
 | `blocks` (list) | selected blocks = `cross_cutting` ∪ (`engine` if scheduled) ∪ (`scorer`/`llm` if scorer) ∪ (`lifecycle` if `state_db.lifecycle !== "none"`) |
-| `truncate_tables` (list) | `agents` + lifecycle tables + domain tables (+ `ledger` if economy) — used to render `tests/helpers/db.ts` |
+| `truncate_tables` (list) | `agents` + lifecycle tables + domain tables (+ block tables: `ledger`, `relationships`, `agent_memories`, `user_agent_bindings`, `notifications` when selected) — used to render `tests/helpers/db.ts` |
 
 > Block activation reads `cross_cutting` / `cadence` / `scorer` / `state_db.lifecycle` directly (see `blockActive()` in `new-scenario.mjs`); there is no separate `identityPublish` flag.
 
@@ -103,8 +102,8 @@ Set `scorer` to `null` for `Consume` scenarios (rule/economy-based scoring).
 | Field | Allowed Values |
 |-------|---------------|
 | `cadence` | `reactive`, `scheduled`, `realtime` (v2) |
-| `archetype.primary` | `Consume`, `Evaluate`, `Compete` (v1) |
-| `cross_cutting` items | `economy`, `llm`, `anticheat`, `identity-publish`, `narrative`, `external` |
+| `archetype.primary` | `Consume`, `Evaluate`, `Compete`, `Social` (v1) |
+| `cross_cutting` items | `economy`, `llm`, `anticheat`, `identity-publish`, `narrative`, `external`, `relationship`, `memory`, `notification` |
 | `state_db.lifecycle` | `none`, `season`, `round` |
 
 ---
@@ -115,5 +114,6 @@ Set `scorer` to `null` for `Consume` scenarios (rule/economy-based scoring).
 |----------|-----------|---------|---------------|-----------|
 | **SkillBazaar** (`examples/skillbazaar.scenario.json`) | Consume | reactive | `["economy"]` | none |
 | **Ability Arena** (`examples/ability-arena.scenario.json`) | Evaluate | scheduled | `["llm","anticheat","identity-publish"]` | season |
+| **Social Circle** (`examples/social-circle.scenario.json`) | Social | scheduled | `["llm","relationship","memory","notification","identity-publish"]` | none |
 
 > **Compete archetype note:** 竞技型 Compete scenarios use `lifecycle: "round"`, `cadence: "scheduled"`, `scorer: null` (rule-based scoring by peer votes), and typically `cross_cutting: ["economy", "identity-publish"]`.

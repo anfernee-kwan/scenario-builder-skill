@@ -6,9 +6,14 @@ import { validateScenario } from "./validate.mjs";
 const p1 = JSON.parse(readFileSync(new URL("../examples/skillbazaar.scenario.json", import.meta.url)));
 const p2 = JSON.parse(readFileSync(new URL("../examples/ability-arena.scenario.json", import.meta.url)));
 
+const p3 = JSON.parse(readFileSync(new URL("../examples/social-circle.scenario.json", import.meta.url)));
+
 test("P1 and P2 examples are valid", () => {
   assert.deepEqual(validateScenario(p1).errors, []);
   assert.deepEqual(validateScenario(p2).errors, []);
+});
+test("P3 Social Circle example is valid", () => {
+  assert.deepEqual(validateScenario(p3).errors, []);
 });
 test("Compete archetype with round lifecycle is valid", () => {
   const compete = {

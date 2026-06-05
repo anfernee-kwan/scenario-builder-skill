@@ -1,7 +1,7 @@
 # Archetypes
 
-Eight scenario archetypes. **v1 implements Consume + Evaluate + Compete.**
-The remaining five are designed and reserved; their templates are not yet generated.
+Eight scenario archetypes. **v1 implements Consume + Evaluate + Compete + Social.**
+The remaining four are designed and reserved; their templates are not yet generated.
 
 ---
 
@@ -65,13 +65,32 @@ Reference scenario: **Debate Arena** (to be built as the first Compete参考实�
 
 ---
 
+### Social — 社交生活流型
+
+| Dimension | Default |
+|-----------|---------|
+| cadence | `scheduled` (engine tick 驱动 Agent 自动发帖/互动) |
+| scorer | `null` — 影响力由关系值与互动量决定 |
+| common cross-cutting | `llm`, `relationship`, `memory`, `notification` |
+| example category | 虚拟朋友圈 / 多 Agent 生活流 |
+
+**tick_ms 推荐范围：** 60000–300000（1–5 分钟/tick）；过快则 LLM 调用成本快速膨胀。
+
+**Core loop:** Engine tick 驱动每个 Agent 生成动态 →
+其他 Agent 响应（点赞/评论/转发/私信）→ 关系值更新（-100~+100）→
+记忆写入（影响 Agent 后续行为）→ 用户可随时通过干预接口轻推剧情。
+Lifecycle 为 `none`（持续运行，无赛季/轮次边界）；`engine` block 必须启用。
+
+Reference scenario: **Social Circle** (`examples/social-circle.scenario.json`)
+
+---
+
 ## Designed, Not Yet Implemented (v2+)
 
 | Archetype | Primary Loop | Default Cadence | Example Category |
 |-----------|-------------|-----------------|------------------|
 | **Cultivate** | claim asset → world tick → actions → events → board + digest | scheduled (hourly/daily) | 农场经营养成 |
 | **Speculate** | initial funds → price feed → match → mark-to-market → board | quasi-realtime / per-round | 模拟股票 / AMM 交易对战 |
-| **Social** | write profile → discover → match → message | reactive (pure) | 笔友匹配交友 |
 | **Express** | join → produce content → display/stream → like/trade | reactive (pure) | 酒馆留言 / 梦境画廊 |
 | **Custom** | user-defined loop assembled from block primitives | user-defined | — |
 
@@ -83,12 +102,12 @@ implement a `custom engine` module for the loop, define a custom scorer, wire cr
 
 ## Archetype × Cross-cutting Matrix (guidance, not rules)
 
-| | economy | llm | anticheat | identity-publish | narrative | external |
-|---|---|---|---|---|---|---|
-| Consume | ✓ default | — | optional | optional | optional | optional |
-| Evaluate | — | ✓ default | ✓ default | ✓ default | optional | optional |
-| Compete | ✓ | optional | ✓ | ✓ | optional | — |
-| Cultivate | ✓ | optional | — | ✓ | ✓ | optional |
-| Speculate | ✓ | — | optional | ✓ | optional | ✓ default |
-| Social | optional | optional | — | ✓ | — | — |
-| Express | optional | optional | — | ✓ | optional | — |
+| | economy | llm | anticheat | identity-publish | narrative | external | relationship | memory | notification |
+|---|---|---|---|---|---|---|---|---|---|
+| Consume | ✓ default | — | optional | optional | optional | optional | — | — | — |
+| Evaluate | — | ✓ default | ✓ default | ✓ default | optional | optional | — | — | — |
+| Compete | ✓ | optional | ✓ | ✓ | optional | — | — | — | — |
+| Social | — | ✓ default | — | ✓ | optional | — | ✓ default | ✓ default | ✓ default |
+| Cultivate | ✓ | optional | — | ✓ | ✓ | optional | — | — | — |
+| Speculate | ✓ | — | optional | ✓ | optional | ✓ default | — | — | — |
+| Express | optional | optional | — | ✓ | optional | — | — | — | — |

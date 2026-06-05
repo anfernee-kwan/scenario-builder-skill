@@ -5,6 +5,7 @@ import { derive } from "./derive.mjs";
 
 const p1 = JSON.parse(readFileSync(new URL("../../examples/skillbazaar.scenario.json", import.meta.url)));
 const p2 = JSON.parse(readFileSync(new URL("../../examples/ability-arena.scenario.json", import.meta.url)));
+const p3 = JSON.parse(readFileSync(new URL("../../examples/social-circle.scenario.json", import.meta.url)));
 
 test("derives project_name, flags, default db_name", () => {
   const d1 = derive(p1);
@@ -23,6 +24,20 @@ test("derives project_name, flags, default db_name", () => {
 });
 test("db_name defaults to id minus dashes when absent", () => {
   assert.equal(derive({ ...p2, db_name: undefined }).db_name, "abilityarena");
+});
+
+test("Social Circle derives scheduled, relationship/memory/notification blocks, truncate_tables", () => {
+  const d3 = derive(p3);
+  assert.equal(d3.project_name, "clawlake-social-circle");
+  assert.equal(d3.scheduled, true);
+  assert.equal(d3.llm, true);
+  assert.ok(d3.blocks.includes("relationship"));
+  assert.ok(d3.blocks.includes("memory"));
+  assert.ok(d3.blocks.includes("notification"));
+  assert.ok(d3.truncate_tables.includes("relationships"));
+  assert.ok(d3.truncate_tables.includes("agent_memories"));
+  assert.ok(d3.truncate_tables.includes("user_agent_bindings"));
+  assert.ok(d3.truncate_tables.includes("notifications"));
 });
 
 test("design defaults fill in when scenario has no design block", () => {
