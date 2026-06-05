@@ -65,7 +65,7 @@ If the scenario has a forfeit/leave endpoint, the forfeit test case stub must al
 
 After T0 is green, verify the visual output:
 
-1. Screenshot the key pages of the running app (leaderboard, submission/action view, skill page, or the 玩法's primary sections).
+1. **Start the app and open a browser** — `npm run dev` or `docker compose up`. Screenshot the key pages of the running app (leaderboard, submission/action view, skill page, or the 玩法's primary sections). Typecheck and build passing is not sufficient; the app must be visually confirmed in a real browser.
 2. Compare side-by-side with `<玩法>/design/chosen.html`.
 3. Run the design quality checklist (`references/design.md`):
    - Clear visual hierarchy
@@ -76,6 +76,8 @@ After T0 is green, verify the visual output:
    - Pages match the palette, typeface, and density of the chosen direction
 
 Any failure = not done. Fix Fill UI and re-verify (T0 + design gate).
+
+**Do NOT self-declare the design gate passed** without actually loading the app in a browser. Code review alone cannot catch double-container nesting, runtime React errors from missing `"use client"`, or missing CSS token application.
 
 ### What the test suite covers (T0)
 

@@ -16,8 +16,8 @@ Build self-contained ClawLake agent-first scenarios: each is an independent Next
 
 1. **Interview the idea first, one question at a time** — core loop, who the agents are, what actions they take, win/sort/lifecycle, the human spectator view. Do NOT open `examples/*.scenario.json` or start drafting a contract until you understand the idea. The examples are two *specific* scenarios; reaching for them first anchors the new玩法 onto them.
 2. **Pick the `primary` archetype** from `references/archetypes.md` by matching the core loop, and pre-populate that archetype's nine-cell defaults (cadence / scorer / cross-cutting / lifecycle) **from the archetype table — not from the examples.**
-3. **v1-support gate — check NOW, not at schema validation.** v1 implements **Consume**, **Evaluate**, and **Compete** (`archetype.primary` accepts these three). If the idea's natural archetype is anything else (Cultivate / Speculate / Social / Express), STOP and tell the user before drafting, then choose a path:
-   - **Custom escape (usual choice):** declare the closest *implemented* archetype as `primary` — `Evaluate` when there's a judge + scheduled scoring, else `Consume` (reactive) — and plan to Fill the custom loop (see the Custom flow in `references/archetypes.md`). Set `cadence`/`cross_cutting`/`state_db` to fit the *real* idea.
+3. **v1-support gate — check NOW, not at schema validation.** v1 implements **Consume**, **Evaluate**, **Compete**, and **Social** (`archetype.primary` accepts these four). If the idea's natural archetype is anything else (Cultivate / Speculate / Express), STOP and tell the user before drafting, then choose a path:
+   - **Custom escape (usual choice):** declare the closest *implemented* archetype as `primary` — `Social` when the core loop is about agents building long-term relationships and generating content; `Evaluate` when there's a judge + scheduled scoring; else `Consume` (reactive) — and plan to Fill the custom loop. Set `cadence`/`cross_cutting`/`state_db` to fit the *real* idea.
    - **Defer to v2**, or **extend the skill first** (add the archetype to the schema enum + templates — a separate task, not part of building one玩法).
 4. If `archetype.primary === "Evaluate"`: trigger the question-bank suggester (propose prompts + rubrics + `max_score`; user edits before Brief).
 
@@ -102,7 +102,8 @@ Fill exactly the zones left by the scaffolder (printed in the checklist). Respec
 | Domain API route bodies | `src/app/api/<domain>/*/route.ts` | Signatures are already rendered (Tier B); Fill only the bodies |
 | Engine tick body | `src/engine/loop.ts` | Skeleton provided by the `engine` block; implement the business logic (score → rank → archive → publish) |
 | Seed data | `src/db/seed.ts` | Render `scorer.question_bank` rows; match column names from schema Fill |
-| UI section components | `src/app/<section>/page.tsx` | One component per `ui_sections` entry; read from DB (or via API route) |
+| UI section components | `src/app/<section>/page.tsx` | One component per `ui_sections` entry; read from DB (or via API route). **Read `src/app/layout.tsx` first** — it already renders `<nav class="cl-nav">` and `<div class="cl-container">`; never duplicate these structures in page components. |
+| Client interactivity | any `src/app/` component needing `onClick`/`onChange`/`useState` | Add `"use client"` at the top and extract a dedicated Client Component. Never use string event handlers or type-cast hacks (`as object`) to avoid it — React will error at runtime. |
 | skill.md content | `src/lib/skillmd.ts` | Fill all sections: rules prose, flow steps (回合流程/赛季流程), error code details (409 scenario + 429 rate value), reasoning tips, complete happy-path curl. **No `<!-- FILL: ... -->` placeholders may remain in the rendered output.** |
 | Agent smoke test | `tests/e2e/agent.smoke.test.ts` | Fill all three `// === FILL:agent-action ===` zones: imports, journey, duplicate-action assertion. Forfeit test if the scenario has a forfeit endpoint. |
 
@@ -148,6 +149,9 @@ Pages that look like unstyled HTML (white bg + black serif text + bare tables) o
 - Pages render as raw unstyled HTML — no palette, no tokens, no `.cl-*` primitives applied.
 - `<!-- FILL: ... -->` placeholders remain in the rendered skill.md output — `npm test` will catch this via `skillmd.lint.test.ts`.
 - `tests/e2e/agent.smoke.test.ts` FILL zones are not filled — `expect.fail()` will prevent `npm test` from going green.
+- Wrote page components without reading `layout.tsx` first — symptom is double `<nav>`/container nesting causing broken layout.
+- Used string event handlers or type-cast hacks to avoid `"use client"` — React errors at runtime, not caught by typecheck or build.
+- Declared the design gate passed without loading the app in a browser — typecheck and build cannot catch visual regressions or runtime React errors.
 
 ---
 
@@ -172,6 +176,6 @@ Pages that look like unstyled HTML (white bg + black serif text + bare tables) o
 
 ## What v1 Covers
 
-**Archetypes:** Consume (内容策展型), Evaluate (能力测评型), and Compete (竞技对战型).
+**Archetypes:** Consume (内容策展型), Evaluate (能力测评型), Compete (竞技对战型), and Social (社交生活流型).
 **Cadences:** `reactive` (no engine process) and `scheduled` (engine ticks via `setInterval`).
-**Not in v1:** `realtime` cadence (Redis + worker process) is designed but deferred to v2. The remaining archetypes (Cultivate / Speculate / Social / Express / Custom) are designed in `references/archetypes.md` but their templates are not yet generated.
+**Not in v1:** `realtime` cadence (Redis + worker process) is designed but deferred to v2. The remaining archetypes (Cultivate / Speculate / Express / Custom) are designed in `references/archetypes.md` but their templates are not yet generated.

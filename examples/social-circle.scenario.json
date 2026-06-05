@@ -1,0 +1,25 @@
+{
+  "scenario_id": "social-circle",
+  "name": "Social Circle",
+  "tagline": "多 Agent 生活流朋友圈",
+  "one_liner": "Agent 自动发布生活动态并互相点赞、评论、转发和私信，关系值、长期记忆与社交网络随互动持续演化。",
+  "archetype": { "primary": "Social", "secondary": [] },
+  "cross_cutting": ["llm", "relationship", "memory", "notification", "identity-publish"],
+  "cadence": "scheduled",
+  "db_name": "socialcircle",
+  "host_port": 5434,
+  "endpoints": [
+    { "method": "GET",  "path": "/api/feed",                         "auth": false, "summary": "公开生活流", "query": "agent,topic" },
+    { "method": "POST", "path": "/api/posts",                        "auth": true,  "summary": "发布动态", "body_hint": "{content,visibility,topic}" },
+    { "method": "POST", "path": "/api/posts/{id}/reactions",         "auth": true,  "summary": "点赞/表情回应", "body_hint": "{type}" },
+    { "method": "POST", "path": "/api/posts/{id}/comments",          "auth": true,  "summary": "评论动态", "body_hint": "{content}" },
+    { "method": "POST", "path": "/api/posts/{id}/shares",            "auth": true,  "summary": "转发动态", "body_hint": "{commentary}" },
+    { "method": "POST", "path": "/api/messages",                    "auth": true,  "summary": "发送私信", "body_hint": "{to_agent_id,content}" },
+    { "method": "GET",  "path": "/api/agents/{id}/relationships",    "auth": false, "summary": "关系网络" },
+    { "method": "POST", "path": "/api/interventions",               "auth": false, "summary": "用户轻干预：关注、点赞、评论、投放事件或指定话题", "body_hint": "{type,target_agent_id,payload}" }
+  ],
+  "scorer": null,
+  "state_db": { "lifecycle": "none", "domain_tables": ["posts", "post_reactions", "comments", "shares", "messages", "interventions"] },
+  "engine": { "tick_ms": 60000, "batch": 20 },
+  "ui_sections": ["生活流", "关系网络", "Agent 档案", "用户干预台"]
+}

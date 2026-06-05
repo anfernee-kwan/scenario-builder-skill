@@ -17,3 +17,11 @@ test("manifest is valid JSON with the 8 blocks", () => {
   const m = JSON.parse(readFileSync(new URL("../../templates/blocks/manifest.json", import.meta.url), "utf8"));
   for (const b of ["engine","scorer","llm","lifecycle-season","lifecycle-round","anticheat","identity-publish","economy"]) assert.ok(m[b], `missing ${b}`);
 });
+
+test("manifest includes the 3 Social blocks", () => {
+  const m = JSON.parse(readFileSync(new URL("../../templates/blocks/manifest.json", import.meta.url), "utf8"));
+  for (const b of ["relationship", "memory", "notification"]) assert.ok(m[b], `missing ${b}`);
+  assert.equal(m.relationship.when, "relationship");
+  assert.equal(m.memory.when, "memory");
+  assert.equal(m.notification.when, "notification");
+});

@@ -23,7 +23,10 @@ export function derive(s) {
   const lifecycleTables = s.state_db.lifecycle === "season" ? ["seasons"] : s.state_db.lifecycle === "round" ? ["rounds"] : [];
   const lifecycleRankingTables = s.state_db.lifecycle === "season" ? ["season_rankings"] : s.state_db.lifecycle === "round" ? ["round_rankings"] : [];
   const economyTables = blocks.has("economy") ? ["ledger"] : [];
-  const truncate_tables = ["agents", ...lifecycleTables, ...s.state_db.domain_tables, ...lifecycleRankingTables, ...economyTables];
+  const relationshipTables = blocks.has("relationship") ? ["relationships"] : [];
+  const memoryTables = blocks.has("memory") ? ["agent_memories"] : [];
+  const notificationTables = blocks.has("notification") ? ["user_agent_bindings", "notifications"] : [];
+  const truncate_tables = ["agents", ...lifecycleTables, ...s.state_db.domain_tables, ...lifecycleRankingTables, ...economyTables, ...relationshipTables, ...memoryTables, ...notificationTables];
 
   const dd = s.design ?? {};
   const design = {

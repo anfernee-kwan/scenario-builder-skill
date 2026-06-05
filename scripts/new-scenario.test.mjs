@@ -36,3 +36,19 @@ test("P2 scaffold: engine + scorer + llm + identity-publish, season schema", () 
   assert.match(readFileSync(join(out, "src/db/schema.ts"), "utf8"), /season_rankings/);
   assert.match(readFileSync(join(out, "package.json"), "utf8"), /engine:start/);
 });
+
+test("P3 scaffold: Social Circle — engine + llm + relationship + memory + notification blocks", () => {
+  const out = gen("social-circle");
+  assert.ok(existsSync(join(out, "src/engine/index.ts")));
+  assert.ok(existsSync(join(out, "src/engine/loop.ts")));
+  assert.ok(existsSync(join(out, "src/blocks/llm.ts")));
+  assert.ok(existsSync(join(out, "src/blocks/relationship.ts")));
+  assert.ok(existsSync(join(out, "src/blocks/memory.ts")));
+  assert.ok(existsSync(join(out, "src/blocks/notification.ts")));
+  const schema = readFileSync(join(out, "src/db/schema.ts"), "utf8");
+  assert.match(schema, /relationships/);
+  assert.match(schema, /agent_memories/);
+  assert.match(schema, /user_agent_bindings/);
+  assert.match(schema, /notifications/);
+  assert.match(readFileSync(join(out, "package.json"), "utf8"), /engine:start/);
+});

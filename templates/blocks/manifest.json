@@ -6,5 +6,8 @@
   "lifecycle-round":{ "when": "lifecycle:round", "schema_partial": "lifecycle/round/schema.partial.ts" },
   "anticheat":{ "when": "anticheat", "copy": ["src/blocks/anticheat.ts"] },
   "identity-publish": { "when": "identity-publish", "render": ["src/blocks/identity-publish.ts.hbs"] },
-  "economy":  { "when": "economy", "schema_partial": "economy/schema.partial.ts" }
+  "economy":  { "when": "economy", "schema_partial": "economy/schema.partial.ts" },
+  "relationship": { "when": "relationship", "schema_partial": "relationship/schema.partial.ts", "copy": ["src/blocks/relationship.ts"] },
+  "memory":   { "when": "memory", "schema_partial": "memory/schema.partial.ts", "copy": ["src/blocks/memory.ts"] },
+  "notification": { "when": "notification", "schema_partial": "notification/schema.partial.ts", "copy": ["src/blocks/notification.ts"] }
 }

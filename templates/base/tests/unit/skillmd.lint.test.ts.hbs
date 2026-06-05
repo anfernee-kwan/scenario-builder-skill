@@ -59,6 +59,18 @@ describe("skill.md quality gate (Gate 2a)", () => {
     expect(body).toMatch(/^\d+\.\s/m);
   });
 {{/if}}
+{{#if (eq archetype.primary "Social")}}
+  it("生活流节奏 section exists and has real content (≥ 20 chars)", () => {
+    expect(md).toContain("## 生活流节奏");
+    const match = md.match(/##\s*生活流节奏\n+([\s\S]*?)(?=\n##\s|$)/);
+    expect(match, "生活流节奏 section not found in skill.md").toBeTruthy();
+    const body = (match![1] ?? "").trim();
+    expect(
+      body.length,
+      `生活流节奏 is empty or too short (${body.length} chars). Describe the engine tick cadence, user intervention types, and relationship value rules.`
+    ).toBeGreaterThanOrEqual(20);
+  });
+{{/if}}
 
   it("scenario_id and base_url appear in output", () => {
     expect(md).toContain("{{scenario_id}}");
