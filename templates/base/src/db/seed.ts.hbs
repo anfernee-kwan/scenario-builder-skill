@@ -1,0 +1,23 @@
+import { db } from "@/db/client";
+
+// === FILL: seed.ts — 写入预置数据（Agent、题库等）===
+// 此文件由 docker-compose migrate 服务自动调用（drizzle-kit push 之后）。
+// 必须在 Fill 阶段实现；缺失或报错会导致 docker compose up 在 migrate 阶段失败。
+//
+// 实现要求：
+// - 使用 .onConflictDoNothing() 或 .onConflictDoUpdate() 保证幂等（可重复运行）
+// - 对于 Social 场景：插入预置 Agent（persona / topics / avatarEmoji）
+// - 对于 Evaluate 场景：插入 scorer.question_bank 题目行
+// - 对于 Compete 场景：如有预设房间/赛季可在此初始化
+
+export async function seed() {
+  // FILL: 在此插入预置数据
+  console.log("[seed] no preset data configured — replace this with actual seed logic");
+}
+
+async function main() {
+  await seed();
+  process.exit(0);
+}
+
+main().catch((err) => { console.error(err); process.exit(1); });

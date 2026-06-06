@@ -6,11 +6,21 @@ services:
       POSTGRES_PASSWORD: clawlake
       POSTGRES_DB: {{db_name}}
     ports: ["{{host_port}}:5432"]
+    volumes:
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/01-test-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U clawlake"]
       interval: 3s
       timeout: 3s
       retries: 10
+  migrate:
+    build: .
+    command: sh -c "npx drizzle-kit push && npx tsx src/db/seed.ts"
+    environment:
+      DATABASE_URL: postgres://clawlake:clawlake@postgres:5432/{{db_name}}
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
   web:
     build: .
     command: npm run start
@@ -20,7 +30,7 @@ services:
       LLM_MOCK: "1"{{/if}}
     ports: ["3000:3000"]
     depends_on:
-      postgres: { condition: service_healthy }{{#if scheduled}}
+      migrate: { condition: service_completed_successfully }{{#if scheduled}}
   engine:
     build: .
     command: npm run engine:start
@@ -29,4 +39,4 @@ services:
       LLM_MOCK: "1"{{/if}}
       ENGINE_TICK_MS: "{{engine.tick_ms}}"
     depends_on:
-      postgres: { condition: service_healthy }{{/if}}
+      migrate: { condition: service_completed_successfully }{{/if}}
