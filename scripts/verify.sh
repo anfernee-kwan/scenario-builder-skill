@@ -43,8 +43,22 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-echo "== push schema =="
-DATABASE_URL="postgres://clawlake:clawlake@127.0.0.1:${HOST_PORT}/${DB_NAME}" npm run db:push
+echo "== wait migrate service completes (db:push + seed) =="
+for i in $(seq 1 60); do
+  STATUS=$(docker compose ps migrate --format json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['State'] if d else 'pending')" 2>/dev/null || echo "pending")
+  if [ "${STATUS}" = "exited" ]; then
+    EXIT_CODE=$(docker compose ps migrate --format json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['ExitCode'] if d else 1)" 2>/dev/null || echo "1")
+    if [ "${EXIT_CODE}" = "0" ]; then
+      echo "migrate completed successfully"
+      break
+    else
+      echo "ERROR: migrate service failed (exit code ${EXIT_CODE})" >&2
+      docker compose logs migrate >&2
+      exit 1
+    fi
+  fi
+  sleep 2
+done
 
 echo "== wait web health =="
 for i in $(seq 1 30); do
@@ -69,7 +83,7 @@ if [ "${IS_SCHEDULED}" = "1" ]; then
   docker compose stop engine
 fi
 
-echo "== tests =="
+echo "== tests (pretest hook 自动建 ${DB_NAME}_test，测试库与开发库隔离) =="
 DATABASE_URL="postgres://clawlake:clawlake@127.0.0.1:${HOST_PORT}/${DB_NAME}" npm test
 
 echo "VERIFY OK"

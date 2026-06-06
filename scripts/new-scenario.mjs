@@ -68,7 +68,14 @@ function appendSchemaPartial(src, outDir) {
   appendFileSync(dest, "\n" + readFileSync(src, "utf8").replace(/^import .*$/gm, "").trimStart() + "\n");
 }
 function fillTargets(ctx) {
-  const t = ["src/db/schema.ts (domain table columns)", "domain API route bodies", "src/db/seed.ts", "src/app/page.tsx + section pages", "src/lib/skillmd.ts (rules prose + quickstart + error codes + reasoning tips)", "tests/e2e/agent.smoke.test.ts (FILL:agent-action zones)"];
+  const t = [
+    "src/db/schema.ts (domain table columns)",
+    "domain API route bodies",
+    "src/db/seed.ts (预置数据 — stub 已生成，实现 seed() 函数体；docker-compose migrate 依赖此文件)",
+    "src/app/page.tsx + section pages",
+    "src/lib/skillmd.ts (rules prose + quickstart + error codes + reasoning tips)",
+    "tests/e2e/agent.smoke.test.ts (FILL:agent-action zones)",
+  ];
   if (ctx.scheduled) t.push("src/engine/loop.ts (tick body)");
   return t;
 }
@@ -90,20 +97,31 @@ if (process.argv[1] && process.argv[1].endsWith("new-scenario.mjs")) {
   console.log(`
 AFTER FILL — start locally:
 
-  Option A: Docker (recommended)
-  ──────────────────────────────
-  cd ${outDir}
-  docker compose up -d --build        # starts postgres + web${ctx.scheduled ? " + engine" : ""}
-  # wait ~10s for postgres to be healthy, then:
-  DATABASE_URL="${dbUrl}" npm run db:push
-  open http://localhost:3000
+  ⚠️  先确认 src/db/seed.ts 已创建（Fill 阶段必须手动写），
+      docker-compose migrate 服务会自动调用它，缺失则启动失败。
 
-  Option B: without Docker (postgres must already be running)
-  ───────────────────────────────────────────────────────────
+  Option A: Docker（推荐，一条命令）
+  ────────────────────────────────
   cd ${outDir}
-  cp .env.example .env                # edit DATABASE_URL to point at your postgres
+  docker compose up --build
+  # 自动完成：postgres 启动 → migrate（db:push + seed）→ web${ctx.scheduled ? " + engine" : ""} 启动
+  # 访问 http://localhost:3000
+
+  Option B: 本地开发（postgres 必须已运行）
+  ─────────────────────────────────────────
+  cd ${outDir}
+  cp .env.example .env                # 确认 DATABASE_URL 指向本地 postgres
   npm install
   DATABASE_URL="${dbUrl}" npm run db:push
-  npm run dev                         # http://localhost:3000${ctx.scheduled ? `\n  # in a separate terminal:\n  npm run engine` : ""}
+  DATABASE_URL="${dbUrl}" npx tsx src/db/seed.ts
+  ${ctx.scheduled ? "npm run dev:all              # web + engine 同时启动" : "npm run dev                  # http://localhost:3000"}
+
+  T0 验收（Fill 完成后）
+  ──────────────────────
+  npm run typecheck
+  npm run build
+  npm test                             # pretest 自动建 ${ctx.db_name}_test，开发库不受影响
+
+  ⚠️  禁止直接运行 vitest run，否则 resetDb() 会 TRUNCATE 开发库数据
 `);
 }
