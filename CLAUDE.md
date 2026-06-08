@@ -12,7 +12,7 @@ Claude Code skill 仓库，用于生成 ClawLake agent-first 场景玩法。每�
 |------------|------|
 | `SKILL.md` | Skill 入口，定义 6 阶段流水线 |
 | `schema/scenario.schema.json` | scenario.json 的 JSON Schema |
-| `references/` | 阶段参考文档（archetype 表、block 规则、设计指南等） |
+| `references/` | 阶段参考文档（archetype 表、block 规则、设计指南等）；`agent-event-sensing.md` 记录 cron 轮询方案 |
 | `templates/` | Handlebars 模板（base Tier-B + blocks + design mockup） |
 | `examples/` | 4 个参考 scenario.json（仅作格式参考） |
 | `scripts/` | 生成器脚本（validate、new-scenario、verify、design-preview） |
@@ -37,12 +37,26 @@ bash scripts/new-scenario.sh path/to/scenario.json --out clawlake-<slug>
 # 预览设计 mockup
 bash scripts/design-preview.sh <玩法>/design [port]
 
+# 启动生成的场景（Docker 全栈，一条命令）
+# 自动完成：postgres → migrate（db:push + seed）→ web + engine
+cd clawlake-<slug> && docker compose up --build
+
+# 本地开发（postgres 已运行）
+cd clawlake-<slug>
+cp .env.example .env
+npm install
+DATABASE_URL=... npm run db:push
+DATABASE_URL=... npx tsx src/db/seed.ts
+npm run dev:all       # web + engine 同时启动（scheduled 场景）
+
 # 全栈 Docker 验收
 bash scripts/verify.sh clawlake-<slug>
 
 # 运行生成器自身的测试
 npm test
 ```
+
+> ⚠️ `src/db/seed.ts` 是 Fill 阶段手动创建的文件（无脚手架模板），docker-compose 的 `migrate` 服务依赖它。Fill 时必须创建，否则 `docker compose up` 在 migrate 阶段报错。
 
 ## 修改 skill 时的约束
 

@@ -8,12 +8,14 @@ Two gates in the 6-phase pipeline:
 
 ## T0 Acceptance Checklist (offline, no docker required)
 
+> ⚠️ **测试库隔离（重要）：** `npm test` 通过 `pretest` hook 自动创建并迁移 `<db_name>_test` 测试库，测试对开发库无副作用。**严禁直接运行 `vitest run`** — 绕过 pretest 时 `resetDb()` 会 TRUNCATE 开发库数据，且运行时会抛出安全错误。Postgres 必须在运行中（`docker compose up -d postgres` 或本地实例）。
+
 Run from inside the generated app directory after Fill is complete:
 
 ```bash
 npm run typecheck    # zero TypeScript errors
 npm run build        # Next.js build clean
-npm test             # all tests pass
+npm test             # pretest hook 自动建测试库 → 测试全绿
 ```
 
 All three must be green. A partial green (e.g., typecheck passes but tests fail) is **not** acceptable.
@@ -96,8 +98,10 @@ Any failure = not done. Fix Fill UI and re-verify (T0 + design gate).
 bash scripts/verify.sh clawlake-<slug>
 ```
 
-This runs: `docker compose up -d --build` → postgres healthy → `db:push` → web healthy →
+This runs: `docker compose up -d --build` → postgres healthy → **migrate** (`drizzle-kit push` + `seed.ts`，完成后退出) → web healthy + engine start →
 `curl /skill/<id>` + `curl /.well-known/agent.json` → (if scheduled) check engine logs + stop engine → `npm test` → **VERIFY OK**.
+
+> ⚠️ `migrate` 服务依赖 `src/db/seed.ts` 存在且可运行。若 seed.ts 缺失或报错，migrate 退出码非 0，web/engine 不会启动。Fill 阶段必须创建 seed.ts。
 
 Stop any other scenario's web container before running (port 3000 collision):
 ```bash
@@ -159,10 +163,10 @@ cd .tmp-gen/clawlake-skillbazaar
 npm install
 DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5432/skillbazaar npm run db:push
 
-# T0 smoke
+# T0 smoke (pretest hook 自动创建 skillbazaar_test)
 npm run typecheck
 npm run build
-DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5432/skillbazaar npm test
+npm test
 ```
 
 Expected: **29 tests pass** (the P1 reference suite).
@@ -182,10 +186,10 @@ cd .tmp-gen/clawlake-ability-arena
 npm install
 DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5433/abilityarena npm run db:push
 
-# T0 smoke (LLM_MOCK=1 so no real LLM calls)
+# T0 smoke (LLM_MOCK=1 so no real LLM calls; pretest 自动创建 abilityarena_test)
 npm run typecheck
 npm run build
-DATABASE_URL=postgres://clawlake:clawlake@127.0.0.1:5433/abilityarena LLM_MOCK=1 npm test
+LLM_MOCK=1 npm test
 ```
 
 Expected: **27 tests pass** (the P2 reference suite).

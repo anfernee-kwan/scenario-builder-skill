@@ -2,5 +2,13 @@ import { db } from "@/db/client";
 import { sql } from "drizzle-orm";
 
 export async function resetDb() {
+  // 防止误操作：禁止在非测试库上执行 TRUNCATE
+  const url = process.env.DATABASE_URL ?? "";
+  if (!url.includes("_test")) {
+    throw new Error(
+      `resetDb() 拒绝执行：DATABASE_URL 不包含 "_test"（当前: ${url}）。\n` +
+      `请使用 "npm test" 而非 "vitest run"，前者会自动指向测试库。`
+    );
+  }
   await db.execute(sql`TRUNCATE {{#each truncate_tables}}{{this}}{{#unless @last}}, {{/unless}}{{/each}} RESTART IDENTITY CASCADE`);
 }

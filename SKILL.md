@@ -84,7 +84,7 @@ What the script does:
 1. Validates `scenario.json` against `schema/scenario.schema.json` (errors abort immediately).
 2. Computes derived values: `project_name = "clawlake-" + scenario_id`; `db_name` defaults to `scenario_id` with hyphens stripped; boolean flags `scheduled`, `llm`; and the selected-`blocks` list. (Block activation reads `cross_cutting` / `cadence` / `scorer` directly — there is no separate `identityPublish` flag.)
 3. Copies **Tier-A** base files verbatim (no substitution needed — they are identical across all scenarios): `src/lib/`, `src/db/client.ts`, `src/app/api/health/`, `src/app/api/identity/`, `src/app/api/agents/me/`, `tsconfig.json`, `next.config.ts`, `vitest.config.ts`, `Dockerfile`, `.dockerignore`, `tests/helpers/client.ts`.
-4. Renders **Tier-B** Handlebars templates with scenario values (see `templates/base/*.hbs`): `globals.css.hbs` (emits `:root` CSS variables from `design` tokens + `.cl-*` component primitives), `layout.tsx` (`{{name}}`, `{{tagline}}`, `data-theme`), `skill/[name]/route.ts` (`{{scenario_id}}`), `.well-known/agent.json/route.ts` (`{{scenario_id}}`, `{{cadence}}`, `{{#each endpoints}}`), `drizzle.config.ts` (`{{db_name}}`), `package.json` (+ `{{#if scheduled}}` engine scripts), `docker-compose.yml` (+ `{{#if scheduled}}` engine service, `{{#if llm}}` LLM env), `.env.example` (same conditionals).
+4. Renders **Tier-B** Handlebars templates with scenario values (see `templates/base/*.hbs`): `globals.css.hbs` (emits `:root` CSS variables from `design` tokens + `.cl-*` component primitives), `layout.tsx` (`{{name}}`, `{{tagline}}`, `data-theme`), `skill/[name]/route.ts` (`{{scenario_id}}`), `.well-known/agent.json/route.ts` (`{{scenario_id}}`, `{{cadence}}`, `{{#each endpoints}}`), `drizzle.config.ts` (`{{db_name}}`), `package.json` (+ `{{#if scheduled}}` engine scripts + `dev:all` script), `docker-compose.yml` (always includes `migrate` service that runs `drizzle-kit push && npx tsx src/db/seed.ts` before web/engine start; + `{{#if scheduled}}` engine service, `{{#if llm}}` LLM env), `.env.example` (same conditionals).
 5. Copies selected **blocks** per `templates/blocks/manifest.json` based on `scenario.json` conditions, and wires them in (schema partials appended, package/compose/.env updated).
 6. Renders `skill.md` skeleton from `templates/skill.md.hbs` (7 sections; rules prose = Fill placeholder).
 7. Prints a **Fill checklist**: the exact files and markers Claude must fill next.
@@ -101,7 +101,7 @@ Fill exactly the zones left by the scaffolder (printed in the checklist). Respec
 | Domain table columns | `src/db/schema.ts` between `// === FILL:domain ===` markers | Column names must match `state_db.domain_tables`; types follow drizzle conventions |
 | Domain API route bodies | `src/app/api/<domain>/*/route.ts` | Signatures are already rendered (Tier B); Fill only the bodies |
 | Engine tick body | `src/engine/loop.ts` | Skeleton provided by the `engine` block; implement the business logic (score → rank → archive → publish) |
-| Seed data | `src/db/seed.ts` | Render `scorer.question_bank` rows; match column names from schema Fill |
+| Seed data | `src/db/seed.ts` | **Fill-only，无模板生成** — 必须手动创建。写入预置 Agent/数据；`docker-compose up` 的 `migrate` 服务会自动调用此文件，文件缺失或报错会导致启动失败。对于 Evaluate 场景：render `scorer.question_bank` rows；match column names from schema Fill |
 | UI section components | `src/app/<section>/page.tsx` | One component per `ui_sections` entry; read from DB (or via API route). **Read `src/app/layout.tsx` first** — it already renders `<nav class="cl-nav">` and `<div class="cl-container">`; never duplicate these structures in page components. |
 | Client interactivity | any `src/app/` component needing `onClick`/`onChange`/`useState` | Add `"use client"` at the top and extract a dedicated Client Component. Never use string event handlers or type-cast hacks (`as object`) to avoid it — React will error at runtime. |
 | skill.md content | `src/lib/skillmd.ts` | Fill all sections: rules prose, flow steps (回合流程/赛季流程), error code details (409 scenario + 429 rate value), reasoning tips, complete happy-path curl. **No `<!-- FILL: ... -->` placeholders may remain in the rendered output.** |
@@ -119,8 +119,10 @@ npm run typecheck && npm run build && npm test
 ```bash
 npm run typecheck   # zero TypeScript errors
 npm run build       # clean Next.js build
-npm test            # all tests green
+npm test            # pretest hook 自动创建 <db_name>_test 测试库，然后跑全套测试
 ```
+
+> ⚠️ **禁止直接运行 `vitest run`**：绕过 pretest 时 `resetDb()` 会打到开发库并 TRUNCATE 所有数据。始终用 `npm test`。
 
 **Gate 2a — skill.md quality (required after T0):**
 `tests/unit/skillmd.lint.test.ts` runs as part of `npm test` and **fails by default** until all sections in `src/lib/skillmd.ts` are fully filled. It checks: no `<!-- FILL -->` placeholders remain, 错误码速查 has concrete 409 + 429 values, 推理建议 has real content, 快速开始 has ≥ 2 curl calls, flow section has numbered steps.
